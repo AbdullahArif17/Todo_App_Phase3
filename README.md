@@ -9,6 +9,7 @@ A full-stack todo application with user authentication, task management, and res
 - Mark tasks as complete/incomplete
 - User-specific task isolation
 - Responsive UI for desktop and mobile
+- Production-ready security and performance features
 
 ## Tech Stack
 
@@ -16,6 +17,9 @@ A full-stack todo application with user authentication, task management, and res
 - **Backend**: Python, FastAPI, SQLModel
 - **Database**: PostgreSQL (with Neon Serverless option)
 - **Authentication**: JWT-based with secure password hashing
+- **Containerization**: Docker, Docker Compose
+- **Reverse Proxy**: Nginx
+- **Caching**: Redis
 
 ## Architecture
 
@@ -40,13 +44,64 @@ apps/
     └── alembic/       # Database migrations
 ```
 
-## Getting Started
+## Production Deployment
+
+### Prerequisites
+
+- Docker and Docker Compose
+- At least 2GB RAM available
+- Port 80 and 443 available (or 3000 and 8000 for development)
+
+### Production Setup
+
+1. **Configure environment variables**:
+   ```bash
+   cp .env.production .env
+   # Edit the .env file with your production settings
+   # Make sure to set a strong SECRET_KEY
+   ```
+
+2. **Run the deployment script**:
+   ```bash
+   chmod +x deploy.sh
+   ./deploy.sh
+   ```
+
+3. **Verify deployment**:
+   ```bash
+   # Check if all services are running
+   docker-compose -f docker-compose.prod.yml ps
+
+   # Check logs
+   docker-compose -f docker-compose.prod.yml logs
+   ```
+
+### Manual Production Setup
+
+If you prefer to set up manually:
+
+1. **Build and start services**:
+   ```bash
+   docker-compose -f docker-compose.prod.yml up -d --build
+   ```
+
+2. **Run database migrations**:
+   ```bash
+   docker-compose -f docker-compose.prod.yml exec backend alembic upgrade head
+   ```
+
+3. **Create demo user** (optional):
+   ```bash
+   docker-compose -f docker-compose.prod.yml exec backend python create_demo_user.py
+   ```
+
+## Development Setup
 
 ### Prerequisites
 
 - Node.js 18+
 - Python 3.11+
-- Docker and Docker Compose (optional)
+- Docker and Docker Compose (optional for development)
 
 ### Development Setup
 
@@ -122,6 +177,9 @@ DATABASE_URL=postgresql://username:password@localhost:5432/todo_app_dev
 SECRET_KEY=your-super-secret-key-change-in-production
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
+ENVIRONMENT=development
+DEBUG=True
+ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 ```
 
 ### Frontend
@@ -130,6 +188,7 @@ Create a `.env.local` file in the frontend directory:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+NODE_ENV=development
 ```
 
 ## Database Migrations
@@ -147,26 +206,45 @@ alembic revision --autogenerate -m "Description of changes"
 alembic upgrade head
 ```
 
-## Security
+## Security Features
 
-- Passwords are securely hashed using bcrypt
-- JWT tokens for authentication with configurable expiration
-- Input validation using Pydantic schemas
-- SQL injection prevention through SQLModel ORM
+- JWT-based authentication with proper token expiration
+- Password hashing with bcrypt
+- SQL injection prevention through ORM
+- XSS protection with proper headers
+- Rate limiting to prevent abuse
+- CORS configuration for API security
+- Input validation and sanitization
 
-## Testing
+## Using the Application
 
-Coming soon - unit and integration tests for both frontend and backend.
+Once both services are running:
 
-## Contributing
+1. **Register a new account** by visiting `http://localhost:3000/auth/sign-up`
+2. **Log in** with your credentials at `http://localhost:3000/auth/sign-in`
+3. **Manage your todos** at `http://localhost:3000/dashboard/todos`
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Commit your changes (`git commit -m 'Add some amazing feature'`)
-5. Push to the branch (`git push origin feature/amazing-feature`)
-6. Open a Pull Request
+The application provides full CRUD functionality for todo items with authentication and user-specific data isolation. Each user will only see their own tasks, and all security measures are in place to protect user data.
 
-## License
+## Production Features
 
-This project is licensed under the MIT License.
+- Docker containerization for consistent deployments
+- Nginx reverse proxy for performance and security
+- PostgreSQL database for production use
+- Redis for caching and session storage
+- Health checks and monitoring
+- Structured logging
+- Environment-based configuration
+
+## Demo Credentials
+
+For testing purposes, a demo user is created during deployment:
+
+- Email: `demo@example.com`
+- Password: `demo123`
+
+## Notes:
+- The application uses SQLite by default for development (as configured in the backend)
+- For production, PostgreSQL is configured in the docker-compose.prod.yml
+- All environment variables can be set in `.env` files for both frontend and backend
+- The production setup includes security headers, SSL termination (via Nginx), and optimized caching

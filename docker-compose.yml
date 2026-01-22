@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://todo_user:todo_password@db:5432/todo_db
+      - SECRET_KEY=your-super-secret-key-change-in-production
+    depends_on:
+      - db
+    volumes:
+      - ./apps/backend:/app
+
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./apps/frontend:/app
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: todo_db
+      POSTGRES_USER: todo_user
+      POSTGRES_PASSWORD: todo_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

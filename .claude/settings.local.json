@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(sp.constitution)",
+      "Bash(git rev-parse --abbrev-ref HEAD)",
+      "Bash(git fetch --all --prune)",
+      "Bash(.specify/scripts/bash/create-new-feature.sh --json \"Build a multi-user, full-stack Todo web application.\n\nUsers should be able to:\n- Sign up and sign in securely\n- Create, view, update, delete todo tasks\n- Mark tasks as complete or incomplete\n- Access the application through a responsive web interface\n- See and manage only their own tasks\n\nThe system must:\n- Persist data across sessions\n- Enforce user-level data isolation\n- Serve as the web-based evolution of the Phase I console app\n\nThe purpose of Phase II is to transform the Todo system\ninto a modern, production-style web application\nwhile remaining fully spec-driven.\" --number 1 --short-name \"multi-user-todo\")",
+      "Bash(.specify/scripts/bash/setup-plan.sh --json)",
+      "Bash(.specify/scripts/bash/update-agent-context.sh claude)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh --json)",
+      "Bash(.specify/scripts/bash/check-prerequisites.sh --json --require-tasks --include-tasks)",
+      "Bash(pip install -r requirements.txt)",
+      "Bash(pip install fastapi==0.104.1 sqlmodel==0.0.16 uvicorn==0.24.0 pydantic==1.10.13 pydantic-settings==2.1.0 passlib[bcrypt]==1.7.4 python-jose==3.3.0 python-multipart==0.0.6 alembic==1.13.1 sqlalchemy==1.4.50 better-exceptions==0.3.3 pytest==7.4.3 pytest-asyncio==0.21.1 httpx==0.25.2)",
+      "Bash(pip install sqlmodel==0.0.8 sqlalchemy==1.4.49)",
+      "Bash(findstr -i sql)",
+      "Bash(uvicorn src.api.main:app --reload --port 8000)"
+    ]
+  }
+}

@@ -1,0 +1,63 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+.ENV
+.venv/
+.python-version
+
+# Build outputs
+build/
+dist/
+*.egg
+*.egg-info/
+.installed.cfg
+*.egg-info/
+
+# Virtual environments
+.venv
+venv/
+env/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*.log
+
+# IDE specific
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment variables
+.env*
+!.env.example
+
+# Next.js
+.next
+out/
+
+# Testing
+coverage/
+htmlcov/
+.coverage
+
+# Local development
+.dockerignore
+*.local.yml
+*.local.yaml
+
+# Alembic
+alembic/versions/.*\.py

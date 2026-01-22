@@ -1,0 +1,467 @@
+openapi: 3.0.3
+info:
+  title: Todo Web Application API
+  description: RESTful API for the multi-user Todo web application
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@todoapp.example.com
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Development server
+  - url: https://api.todoapp.example.com/v1
+    description: Production server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserRegistration:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: "securePassword123"
+
+    UserLogin:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          format: password
+          example: "securePassword123"
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        created_at:
+          type: string
+          format: date-time
+          example: "2023-01-01T00:00:00Z"
+
+    TodoTaskRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          example: "Buy groceries"
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+          example: "Need to buy milk, bread, and eggs"
+
+    TodoTaskResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174001"
+        title:
+          type: string
+          example: "Buy groceries"
+        description:
+          type: string
+          nullable: true
+          example: "Need to buy milk, bread, and eggs"
+        is_completed:
+          type: boolean
+          default: false
+          example: false
+        user_id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        created_at:
+          type: string
+          format: date-time
+          example: "2023-01-01T00:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2023-01-01T00:00:00Z"
+
+    TodoTaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 255
+          example: "Buy groceries"
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+          example: "Need to buy milk, bread, and eggs"
+        is_completed:
+          type: boolean
+          example: false
+
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Operation successful"
+        data:
+          type: object
+          nullable: true
+
+    ValidationError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Validation error occurred"
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "email"
+              message:
+                type: string
+                example: "Invalid email format"
+
+  parameters:
+    taskId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: The UUID of the todo task
+
+  responses:
+    UnauthorizedError:
+      description: Authentication required or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponse'
+          example:
+            success: false
+            message: "Not authenticated or invalid token"
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiResponse'
+          example:
+            success: false
+            message: "Resource not found"
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      description: Creates a new user account with the provided email and password
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                success: true
+                message: "User registered successfully"
+                data:
+                  id: "123e4567-e89b-12d3-a456-426614174000"
+                  email: "user@example.com"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                success: false
+                message: "Email already registered"
+
+  /auth/login:
+    post:
+      summary: Authenticate user
+      description: Authenticates a user and returns JWT token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                success: true
+                message: "Login successful"
+                data:
+                  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                success: false
+                message: "Invalid email or password"
+
+  /todos:
+    get:
+      summary: Get user's todo tasks
+      description: Retrieves all todo tasks for the authenticated user
+      tags:
+        - Todos
+      responses:
+        '200':
+          description: Successfully retrieved user's todo tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                success: true
+                message: "Todos retrieved successfully"
+                data:
+                  todos:
+                    - id: "123e4567-e89b-12d3-a456-426614174001"
+                      title: "Buy groceries"
+                      description: "Need to buy milk, bread, and eggs"
+                      is_completed: false
+                      user_id: "123e4567-e89b-12d3-a456-426614174000"
+                      created_at: "2023-01-01T00:00:00Z"
+                      updated_at: "2023-01-01T00:00:00Z"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    post:
+      summary: Create a new todo task
+      description: Creates a new todo task for the authenticated user
+      tags:
+        - Todos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TodoTaskRequest'
+      responses:
+        '201':
+          description: Todo created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                success: true
+                message: "Todo created successfully"
+                data:
+                  id: "123e4567-e89b-12d3-a456-426614174001"
+                  title: "Buy groceries"
+                  description: "Need to buy milk, bread, and eggs"
+                  is_completed: false
+                  user_id: "123e4567-e89b-12d3-a456-426614174000"
+                  created_at: "2023-01-01T00:00:00Z"
+                  updated_at: "2023-01-01T00:00:00Z"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /todos/{id}:
+    get:
+      summary: Get a specific todo task
+      description: Retrieves a specific todo task by ID for the authenticated user
+      tags:
+        - Todos
+      parameters:
+        - $ref: '#/components/parameters/taskId'
+      responses:
+        '200':
+          description: Todo retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                success: true
+                message: "Todo retrieved successfully"
+                data:
+                  id: "123e4567-e89b-12d3-a456-426614174001"
+                  title: "Buy groceries"
+                  description: "Need to buy milk, bread, and eggs"
+                  is_completed: false
+                  user_id: "123e4567-e89b-12d3-a456-426614174000"
+                  created_at: "2023-01-01T00:00:00Z"
+                  updated_at: "2023-01-01T00:00:00Z"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    put:
+      summary: Update a todo task
+      description: Updates an existing todo task for the authenticated user
+      tags:
+        - Todos
+      parameters:
+        - $ref: '#/components/parameters/taskId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TodoTaskUpdate'
+      responses:
+        '200':
+          description: Todo updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                success: true
+                message: "Todo updated successfully"
+                data:
+                  id: "123e4567-e89b-12d3-a456-426614174001"
+                  title: "Buy groceries updated"
+                  description: "Need to buy milk, bread, eggs, and cheese"
+                  is_completed: true
+                  user_id: "123e4567-e89b-12d3-a456-426614174000"
+                  created_at: "2023-01-01T00:00:00Z"
+                  updated_at: "2023-01-02T00:00:00Z"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    delete:
+      summary: Delete a todo task
+      description: Deletes a specific todo task for the authenticated user
+      tags:
+        - Todos
+      parameters:
+        - $ref: '#/components/parameters/taskId'
+      responses:
+        '200':
+          description: Todo deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                success: true
+                message: "Todo deleted successfully"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /todos/{id}/complete:
+    patch:
+      summary: Mark a todo task as complete/incomplete
+      description: Toggles the completion status of a specific todo task
+      tags:
+        - Todos
+      parameters:
+        - $ref: '#/components/parameters/taskId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - is_completed
+              properties:
+                is_completed:
+                  type: boolean
+                  example: true
+      responses:
+        '200':
+          description: Todo completion status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                success: true
+                message: "Todo completion status updated successfully"
+                data:
+                  id: "123e4567-e89b-12d3-a456-426614174001"
+                  title: "Buy groceries"
+                  description: "Need to buy milk, bread, and eggs"
+                  is_completed: true
+                  user_id: "123e4567-e89b-12d3-a456-426614174000"
+                  created_at: "2023-01-01T00:00:00Z"
+                  updated_at: "2023-01-02T00:00:00Z"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'

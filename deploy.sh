@@ -38,7 +38,7 @@ else
 fi
 
 # Check if SECRET_KEY is set
-if [ -z "$SECRET_KEY" ] || [ "$SECRET_KEY" = "super-long-and-secure-key-generated-for-production" ]; then
+if [ -z "$SECRET_KEY" ] || [ "$SECRET_KEY" = "your-super-secret-key-change-in-production" ]; then
   echo "Error: SECRET_KEY is not properly set in $ENV_FILE"
   echo "Please generate a strong secret key and update the .env.production file"
   exit 1
@@ -73,7 +73,7 @@ done
 echo "Running database migrations..."
 docker-compose -f "$DOCKER_COMPOSE_FILE" exec backend alembic upgrade head
 
-# Create admin user if it doesn't exist
+# Create demo user if it doesn't exist
 echo "Creating demo user..."
 docker-compose -f "$DOCKER_COMPOSE_FILE" exec backend python create_demo_user.py
 

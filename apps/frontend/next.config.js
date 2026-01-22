@@ -2,12 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  // Configuration for different environments
   env: {
     NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000',
     NODE_ENV: process.env.NODE_ENV || 'development',
   },
-  // Security headers
   async headers() {
     return [
       {
@@ -41,12 +39,10 @@ const nextConfig = {
       }
     ]
   },
-  // Image optimization configuration
   images: {
-    domains: ['localhost', '127.0.0.1'],
+    domains: ['localhost', '127.0.0.1', 'images.unsplash.com'],
     formats: ['image/webp'],
   },
-  // Enable compression
   compress: true,
 };
 

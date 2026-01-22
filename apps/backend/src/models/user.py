@@ -1,14 +1,46 @@
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
+from typing import Optional, List
 from datetime import datetime
 import uuid
 
-class User(SQLModel, table=True):
-    """
-    Represents an individual user account with authentication details
-    """
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+class UserBase(SQLModel):
     email: str = Field(unique=True, index=True)
+    full_name: Optional[str] = Field(default=None)
+
+class User(UserBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
-    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
-    updated_at: datetime = Field(default=None, sa_column_kwargs={"onupdate": datetime.utcnow})
     is_active: bool = Field(default=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    # Relationship with todos
+    todos: List["TodoTask"] = Relationship(back_populates="owner", cascade_delete=True)
+
+# Model for creating a new user
+class UserCreate(UserBase):
+    password: str
+
+# Model for user registration response
+class UserRegister(UserBase):
+    id: uuid.UUID
+    created_at: datetime
+
+# Model for user login
+class UserLogin(SQLModel):
+    email: str
+    password: str
+
+# Model for user response (without sensitive data)
+class UserResponse(SQLModel):
+    id: uuid.UUID
+    email: str
+    full_name: Optional[str]
+    is_active: bool
+    created_at: datetime
+
+# Model for updating user
+class UserUpdate(SQLModel):
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+    is_active: Optional[bool] = None

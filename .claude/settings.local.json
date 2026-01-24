@@ -13,7 +13,19 @@
       "Bash(pip install fastapi==0.104.1 sqlmodel==0.0.16 uvicorn==0.24.0 pydantic==1.10.13 pydantic-settings==2.1.0 passlib[bcrypt]==1.7.4 python-jose==3.3.0 python-multipart==0.0.6 alembic==1.13.1 sqlalchemy==1.4.50 better-exceptions==0.3.3 pytest==7.4.3 pytest-asyncio==0.21.1 httpx==0.25.2)",
       "Bash(pip install sqlmodel==0.0.8 sqlalchemy==1.4.49)",
       "Bash(findstr -i sql)",
-      "Bash(uvicorn src.api.main:app --reload --port 8000)"
+      "Bash(uvicorn src.api.main:app --reload --port 8000)",
+      "Bash(find . -name \".env*\" -type f -delete)",
+      "Bash(python -c \"\nfrom sqlmodel import SQLModel, create_engine\nfrom core.config import settings\nfrom models.user import User\nfrom models.todo_task import TodoTask\n\nengine = create_engine\\(settings.DATABASE_URL\\)\n\n# Create all tables\nSQLModel.metadata.create_all\\(bind=engine\\)\nprint\\(''Database tables created successfully!''\\)\n\")",
+      "Bash(find src -name \"*.py\" -exec ls -la {} ;)",
+      "Bash(python -c \"\nfrom src.database.init_db import init_db\ninit_db\\(\\)\n\")",
+      "Bash(python init_db.py)",
+      "Bash(source venv/bin/activate)",
+      "Bash(source venv/Scripts/activate)",
+      "Bash(python3 init_db.py)",
+      "Bash(python3 -m pip install -r requirements.txt)",
+      "Bash(apt update)",
+      "Bash(apt install -y python3-pip)",
+      "Bash(python3 -m ensurepip --upgrade)"
     ]
   }
 }

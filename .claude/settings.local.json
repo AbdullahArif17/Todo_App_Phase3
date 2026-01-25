@@ -30,7 +30,10 @@
       "Bash(./deploy-vercel-hf.sh)",
       "Bash(npm run build)",
       "Bash(cat 'apps/frontend/src/app/\\(auth\\)/sign-in/page.tsx')",
-      "Bash(pip install -r requirements-prod.txt)"
+      "Bash(pip install -r requirements-prod.txt)",
+      "Bash(ls -la apps/backend/requirements-*)",
+      "Bash(chmod +x deploy-hf.sh)",
+      "Bash(./deploy-hf.sh)"
     ]
   }
 }

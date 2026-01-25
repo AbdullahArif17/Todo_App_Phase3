@@ -1,12 +1,12 @@
 import os
-import uvicorn
 from src.api.main import app
+import uvicorn
 
 # For Hugging Face Spaces compatibility
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 7860))
+    port = int(os.getenv("PORT", 7860))
     uvicorn.run(
-        "src.api.main:app",
+        app,
         host="0.0.0.0",
         port=port,
         log_level="info"

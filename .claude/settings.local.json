@@ -27,7 +27,9 @@
       "Bash(apt install -y python3-pip)",
       "Bash(python3 -m ensurepip --upgrade)",
       "Bash(chmod +x deploy-vercel-hf.sh)",
-      "Bash(./deploy-vercel-hf.sh)"
+      "Bash(./deploy-vercel-hf.sh)",
+      "Bash(npm run build)",
+      "Bash(cat 'apps/frontend/src/app/\\(auth\\)/sign-in/page.tsx')"
     ]
   }
 }

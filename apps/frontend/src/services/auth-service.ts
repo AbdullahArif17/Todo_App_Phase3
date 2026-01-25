@@ -31,7 +31,7 @@ class AuthService {
     try {
       const response = await api.post<AuthResponse>('/api/v1/auth/register', userData);
 
-      const { access_token, user_id, email } = response.data;
+      const { access_token, user_id, email } = response;
 
       // Store the token in localStorage
       localStorage.setItem('access_token', access_token);
@@ -45,8 +45,9 @@ class AuthService {
       };
 
       return { user, accessToken: access_token };
-    } catch (error: any) {
-      throw new Error(error.response?.data?.detail || 'Registration failed');
+    } catch (error: unknown) {
+      const errorMessage = this.getErrorMessage(error);
+      throw new Error(errorMessage || 'Registration failed');
     }
   }
 
@@ -54,7 +55,7 @@ class AuthService {
     try {
       const response = await api.post<AuthResponse>('/api/v1/auth/login', credentials);
 
-      const { access_token, user_id, email } = response.data;
+      const { access_token, user_id, email } = response;
 
       // Store the token in localStorage
       localStorage.setItem('access_token', access_token);
@@ -68,9 +69,23 @@ class AuthService {
       };
 
       return { user, accessToken: access_token };
-    } catch (error: any) {
-      throw new Error(error.response?.data?.detail || 'Login failed');
+    } catch (error: unknown) {
+      const errorMessage = this.getErrorMessage(error);
+      throw new Error(errorMessage || 'Login failed');
     }
+  }
+
+  private getErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;
+    }
+    if (typeof error === 'object' && error !== null) {
+      const errorObj = error as Record<string, unknown>;
+      if ('detail' in errorObj && typeof errorObj.detail === 'string') {
+        return errorObj.detail;
+      }
+    }
+    return 'An error occurred';
   }
 
   logout(): void {
@@ -99,7 +114,7 @@ class AuthService {
         is_active: true,
         created_at: new Date().toISOString()
       };
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -114,4 +129,5 @@ class AuthService {
   }
 }
 
-export default new AuthService();
+const authService = new AuthService();
+export default authService;

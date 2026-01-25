@@ -2,8 +2,14 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+interface User {
+  id: string;
+  email: string;
+  created_at: string;
+}
+
 interface AuthContextType {
-  user: any;
+  user: User | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   signup: (email: string, password: string) => Promise<void>;
@@ -13,7 +19,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
@@ -42,6 +48,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Store the token
     localStorage.setItem('access_token', data.access_token);
+
+    // Set user data if available in response
+    if (data.user) {
+      setUser(data.user);
+    }
+
     setIsAuthenticated(true);
   };
 
@@ -62,6 +74,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Store the token
     localStorage.setItem('access_token', data.access_token);
+
+    // Set user data if available in response
+    if (data.user) {
+      setUser(data.user);
+    }
+
     setIsAuthenticated(true);
   };
 

@@ -28,7 +28,7 @@ export default function TodoListPage() {
     } else {
       fetchTodos();
     }
-  }, []);
+  }, [router]);
 
   const fetchTodos = async () => {
     try {
@@ -46,8 +46,9 @@ export default function TodoListPage() {
       const data = await response.json();
       setTodos(data);
       setLoading(false);
-    } catch (err: any) {
-      setError(err.message || 'An error occurred while fetching todos');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred while fetching todos';
+      setError(errorMessage);
       setLoading(false);
     }
   };
@@ -77,8 +78,9 @@ export default function TodoListPage() {
       const createdTodo = await response.json();
       setTodos([...todos, createdTodo]);
       setNewTodo({ title: '', description: '' });
-    } catch (err: any) {
-      setError(err.message || 'An error occurred while adding todo');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred while adding todo';
+      setError(errorMessage);
     }
   };
 
@@ -102,8 +104,9 @@ export default function TodoListPage() {
       setTodos(todos.map(todo =>
         todo.id === id ? updatedTodo : todo
       ));
-    } catch (err: any) {
-      setError(err.message || 'An error occurred while updating todo');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred while updating todo';
+      setError(errorMessage);
     }
   };
 
@@ -126,8 +129,9 @@ export default function TodoListPage() {
       }
 
       setTodos(todos.filter(todo => todo.id !== id));
-    } catch (err: any) {
-      setError(err.message || 'An error occurred while deleting todo');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred while deleting todo';
+      setError(errorMessage);
     }
   };
 

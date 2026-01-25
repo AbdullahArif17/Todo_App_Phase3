@@ -37,8 +37,9 @@ export default function SignInPage() {
 
       // Redirect to dashboard
       router.push('/dashboard/todos');
-    } catch (err: any) {
-      setError(err.message || 'An error occurred during login');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred during login';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -106,7 +107,7 @@ export default function SignInPage() {
         </form>
         <div className="text-center">
           <Link href="/auth/sign-up" className="font-medium text-indigo-600 hover:text-indigo-500">
-            Don't have an account? Sign up
+            Don&#39;t have an account? Sign up
           </Link>
         </div>
       </div>

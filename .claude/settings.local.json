@@ -33,7 +33,8 @@
       "Bash(pip install -r requirements-prod.txt)",
       "Bash(ls -la apps/backend/requirements-*)",
       "Bash(chmod +x deploy-hf.sh)",
-      "Bash(./deploy-hf.sh)"
+      "Bash(./deploy-hf.sh)",
+      "Bash(pip index versions pydantic-settings)"
     ]
   }
 }

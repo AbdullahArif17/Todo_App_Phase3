@@ -2,10 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  env: {
-    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000',
-    NODE_ENV: process.env.NODE_ENV || 'development',
-  },
+  // Security headers
   async headers() {
     return [
       {
@@ -29,7 +26,7 @@ const nextConfig = {
           },
           {
             key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin'
+            value: 'strict-origin-when-downgrade'
           },
           {
             key: 'Permissions-Policy',
@@ -39,10 +36,12 @@ const nextConfig = {
       }
     ]
   },
+  // Image optimization configuration
   images: {
     domains: ['localhost', '127.0.0.1', 'images.unsplash.com'],
     formats: ['image/webp'],
   },
+  // Enable compression
   compress: true,
 };
 

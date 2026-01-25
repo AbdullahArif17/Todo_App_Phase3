@@ -25,7 +25,9 @@
       "Bash(python3 -m pip install -r requirements.txt)",
       "Bash(apt update)",
       "Bash(apt install -y python3-pip)",
-      "Bash(python3 -m ensurepip --upgrade)"
+      "Bash(python3 -m ensurepip --upgrade)",
+      "Bash(chmod +x deploy-vercel-hf.sh)",
+      "Bash(./deploy-vercel-hf.sh)"
     ]
   }
 }

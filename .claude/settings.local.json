@@ -36,7 +36,10 @@
       "Bash(./deploy-hf.sh)",
       "Bash(pip index versions pydantic-settings)",
       "Bash(chmod +x create-production-package.sh)",
-      "Bash(./create-production-package.sh)"
+      "Bash(./create-production-package.sh)",
+      "Bash(ls -la apps/backend/requirements*.txt)",
+      "Bash(rsync -av --exclude=\"__pycache__\" --exclude=\"*.pyc\" --exclude=\"*.pyo\" apps/backend/src/ hf-backend-deployment-clean/src/)",
+      "Bash(rsync -av apps/backend/alembic/ hf-backend-deployment-clean/alembic/)"
     ]
   }
 }

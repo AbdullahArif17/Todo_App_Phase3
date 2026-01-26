@@ -17,12 +17,17 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install dependencies
-COPY requirements-final.txt .
+COPY requirements-minimal.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements-final.txt
+    pip install --no-cache-dir -r requirements-minimal.txt
 
 # Copy project
 COPY . .
+
+# Clean up Python cache files to reduce image size
+RUN find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+RUN find . -type f -name "*.pyc" -delete 2>/dev/null || true
+RUN find . -type f -name "*.pyo" -delete 2>/dev/null || true
 
 # Create non-root user
 RUN adduser --disabled-password --gecos '' appuser

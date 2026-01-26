@@ -13,7 +13,7 @@ mkdir -p "$HF_DIR"
 
 # Copy essential files only
 cp apps/backend/Dockerfile.hf "$HF_DIR/Dockerfile"
-cp apps/backend/requirements-final.txt "$HF_DIR/requirements.txt"
+cp apps/backend/requirements-minimal.txt "$HF_DIR/requirements.txt"
 cp apps/backend/app.py "$HF_DIR/"
 cp apps/backend/.dockerignore "$HF_DIR/"
 

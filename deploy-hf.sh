@@ -35,7 +35,7 @@ prepare_backend_for_hf() {
 
   # Copy necessary files to Hugging Face directory
   cp apps/backend/Dockerfile.hf "$HF_DIR/Dockerfile" || { echo "❌ Dockerfile.hf not found"; exit 1; }
-  cp apps/backend/requirements.txt "$HF_DIR/requirements.txt" || { echo "❌ requirements.txt not found"; exit 1; }
+  cp apps/backend/requirements-final.txt "$HF_DIR/requirements.txt" || { echo "❌ requirements-final.txt not found"; exit 1; }
   cp apps/backend/app.py "$HF_DIR/" || { echo "❌ app.py not found"; exit 1; }
 
   # Copy source code
@@ -78,7 +78,7 @@ display_hf_deployment_instructions() {
   echo ""
   echo "   b. Copy these files to your Space:"
   echo "      - Dockerfile (from apps/backend/Dockerfile.hf)"
-  echo "      - requirements.txt (from apps/backend/requirements.txt)"
+  echo "      - requirements.txt (from apps/backend/requirements-final.txt)"
   echo "      - app.py (from apps/backend/app.py)"
   echo "      - src/ directory (entire backend source code)"
   echo "      - alembic/ directory (for database migrations)"

@@ -72,7 +72,6 @@ DEBUG=False
 - Health check endpoints
 - Environment-based configuration
 - Connection pooling for database operations
-- Redis support for caching and sessions
 
 ## Support
 

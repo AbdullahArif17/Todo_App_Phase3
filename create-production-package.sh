@@ -1,3 +1,36 @@
+#!/bin/bash
+
+# Script to create a production-ready package for Hugging Face Spaces deployment
+
+set -e  # Exit immediately if a command exits with a non-zero status
+
+echo "📦 Creating production package for Hugging Face Spaces deployment..."
+
+# Create the deployment directory
+HF_DIR="hf-backend-deployment-clean"
+rm -rf "$HF_DIR"
+mkdir -p "$HF_DIR"
+
+# Copy essential files only
+cp apps/backend/Dockerfile.hf "$HF_DIR/Dockerfile"
+cp apps/backend/requirements-final.txt "$HF_DIR/requirements.txt"
+cp apps/backend/app.py "$HF_DIR/"
+cp apps/backend/.dockerignore "$HF_DIR/"
+
+# Create clean source structure
+mkdir -p "$HF_DIR/src"
+
+# Copy source files while excluding cache and unnecessary files
+rsync -av --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" --exclude=".git" --exclude="node_modules" apps/backend/src/ "$HF_DIR/src/"
+
+# Copy alembic directory if it exists
+if [ -d "apps/backend/alembic" ]; then
+  mkdir -p "$HF_DIR/alembic"
+  rsync -av --exclude="__pycache__" --exclude="*.pyc" --exclude="*.pyo" apps/backend/alembic/ "$HF_DIR/alembic/"
+fi
+
+# Create a clean README
+cat > "$HF_DIR/README.md" << 'EOF'
 # Todo Web Application Backend - Production Ready
 
 This is the production-ready backend for the multi-user Todo web application, designed for deployment on Hugging Face Spaces using Docker.
@@ -72,7 +105,6 @@ DEBUG=False
 - Health check endpoints
 - Environment-based configuration
 - Connection pooling for database operations
-- Redis support for caching and sessions
 
 ## Support
 
@@ -81,3 +113,19 @@ For support, check the Space logs in the Hugging Face interface. If you encounte
 - Database connection string is correct
 - No typos in configuration values
 - Sufficient hardware resources allocated to the Space
+EOF
+
+echo "✅ Production package created in $HF_DIR/"
+echo "📁 Contents:"
+ls -la "$HF_DIR/"
+echo "📦 Source structure:"
+find "$HF_DIR/src" -type f | head -20
+
+echo ""
+echo "🚀 Package ready for deployment to Hugging Face Spaces!"
+echo ""
+echo "To deploy:"
+echo "1. Create a new Space on Hugging Face with Docker SDK"
+echo "2. Upload all files in the $HF_DIR directory to your Space"
+echo "3. Set environment variables in Space settings"
+echo "4. Wait for build to complete"

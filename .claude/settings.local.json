@@ -34,7 +34,9 @@
       "Bash(ls -la apps/backend/requirements-*)",
       "Bash(chmod +x deploy-hf.sh)",
       "Bash(./deploy-hf.sh)",
-      "Bash(pip index versions pydantic-settings)"
+      "Bash(pip index versions pydantic-settings)",
+      "Bash(chmod +x create-production-package.sh)",
+      "Bash(./create-production-package.sh)"
     ]
   }
 }

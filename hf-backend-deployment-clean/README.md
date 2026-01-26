@@ -40,7 +40,7 @@ DEBUG=False
 2. **Upload all files in this directory** to your Space
 3. **Set environment variables** in Space settings
 4. **Wait for the build to complete** (check the logs tab)
-5. **Your API will be available** at `https://your-username-your-space-name.hf.space`
+5. **Your API will be available** at `https://your-username-todo-backend.hf.space`
 
 ## API Endpoints
 

@@ -39,7 +39,12 @@
       "Bash(./create-production-package.sh)",
       "Bash(ls -la apps/backend/requirements*.txt)",
       "Bash(rsync -av --exclude=\"__pycache__\" --exclude=\"*.pyc\" --exclude=\"*.pyo\" apps/backend/src/ hf-backend-deployment-clean/src/)",
-      "Bash(rsync -av apps/backend/alembic/ hf-backend-deployment-clean/alembic/)"
+      "Bash(rsync -av apps/backend/alembic/ hf-backend-deployment-clean/alembic/)",
+      "Bash(__NEW_LINE_ac1f1a750a7f6ed2__ cp apps/backend/requirements-prod.txt hf-backend-deployment-prod/requirements.txt)",
+      "Bash(__NEW_LINE_ac1f1a750a7f6ed2__ cp apps/backend/app.py hf-backend-deployment-prod/)",
+      "Bash(__NEW_LINE_ac1f1a750a7f6ed2__ cp apps/backend/.dockerignore hf-backend-deployment-prod/)",
+      "Bash(rsync -av --exclude=\"__pycache__\" --exclude=\"*.pyc\" --exclude=\"*.pyo\" apps/backend/src/ hf-backend-deployment-prod/src/)",
+      "Bash(rsync -av apps/backend/alembic/ hf-backend-deployment-prod/alembic/)"
     ]
   }
 }

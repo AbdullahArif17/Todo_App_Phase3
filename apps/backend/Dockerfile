@@ -24,13 +24,18 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy project
 COPY . .
 
+# Clean up Python cache files to reduce image size
+RUN find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+RUN find . -type f -name "*.pyc" -delete 2>/dev/null || true
+RUN find . -type f -name "*.pyo" -delete 2>/dev/null || true
+
 # Create non-root user
 RUN adduser --disabled-password --gecos '' appuser
 RUN chown -R appuser:appuser /app
 USER appuser
 
-# Expose port for Hugging Face Spaces
-EXPOSE 7860
+# Expose port
+EXPOSE 8000
 
 # Run the application
-CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

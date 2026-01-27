@@ -44,8 +44,6 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    # Allow credentials in production environments for JWT
-    allow_credentials=True,
     # Expose headers to frontend
     expose_headers=["Access-Control-Allow-Origin"]
 )

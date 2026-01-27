@@ -2,7 +2,7 @@
 title: Todo Web Application Backend
 emoji: 📝
 colorFrom: blue
-colorTo: yellow
+colorTo: indigo
 sdk: docker
 sdk_version: "3.8"
 python_version: "3.11"

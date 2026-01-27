@@ -1,29 +1,26 @@
-from sqlalchemy import create_engine
-from sqlalchemy.pool import QueuePool, StaticPool
-from sqlmodel import Session
+from sqlmodel import create_engine, Session
 from .core.config import settings
+from sqlalchemy.pool import QueuePool
 import logging
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
-# Create engine with production-ready settings
+# Create the database engine
 def create_db_engine():
-    # Connection arguments vary based on database type
+    """
+    Create a database engine with production-ready settings
+    """
     connect_args = {}
-    pool_class = None
 
-    if "sqlite" in settings.DATABASE_URL:
+    if "sqlite" in settings.DATABASE_URL.lower():
         # SQLite-specific settings
         connect_args = {"check_same_thread": False}
-        pool_class = StaticPool if settings.ENVIRONMENT == "development" else QueuePool
     else:
-        # PostgreSQL/MySQL-specific settings
+        # PostgreSQL-specific settings
         connect_args = {
             "connect_timeout": 10,
-            "command_timeout": 30,
         }
-        pool_class = QueuePool
 
     # Engine configuration for production
     engine_kwargs = {
@@ -33,10 +30,8 @@ def create_db_engine():
         "max_overflow": 30,     # Max overflow connections
         "pool_timeout": 30,     # Timeout for getting connection from pool
         "echo": settings.DEBUG, # Log SQL queries in development
+        "poolclass": QueuePool,
     }
-
-    if pool_class:
-        engine_kwargs["poolclass"] = pool_class
 
     engine = create_engine(
         settings.DATABASE_URL,
@@ -47,8 +42,12 @@ def create_db_engine():
     logger.info(f"Database engine created for {settings.ENVIRONMENT} environment")
     return engine
 
+# Create the global engine instance
 engine = create_db_engine()
 
 def get_session():
+    """
+    Generator that yields a database session
+    """
     with Session(engine) as session:
         yield session

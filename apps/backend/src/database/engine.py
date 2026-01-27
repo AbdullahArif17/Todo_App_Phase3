@@ -1,6 +1,5 @@
-from sqlalchemy import create_engine
+from sqlmodel import Session, create_engine
 from sqlalchemy.pool import QueuePool
-from sqlmodel import Session
 from ..core.config import settings
 import logging
 
@@ -13,7 +12,6 @@ def create_db_engine():
     """
     # Connection arguments vary based on database type
     connect_args = {}
-    pool_class = QueuePool
 
     if "sqlite" in settings.DATABASE_URL:
         # SQLite-specific settings
@@ -33,12 +31,12 @@ def create_db_engine():
         "max_overflow": 30,     # Max overflow connections
         "pool_timeout": 30,     # Timeout for getting connection from pool
         "echo": settings.DEBUG, # Log SQL queries in development
+        "poolclass": QueuePool,
     }
 
     engine = create_engine(
         settings.DATABASE_URL,
         connect_args=connect_args,
-        poolclass=pool_class,
         **engine_kwargs
     )
 

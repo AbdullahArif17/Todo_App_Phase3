@@ -4,12 +4,14 @@ from datetime import timedelta
 from uuid import UUID
 from ..models.user import User, UserCreate
 from ..utils.security import get_password_hash, verify_password
+from sqlmodel import select
+from uuid import UUID
 from ..core.security import create_access_token
 from ..core.config import settings
 
 class AuthService:
     @staticmethod
-    async def register_user(user_data: UserCreate, db_session: Session) -> User:
+    def register_user(user_data: UserCreate, db_session: Session) -> User:
         """
         Register a new user with hashed password
         """
@@ -31,7 +33,7 @@ class AuthService:
         return db_user
 
     @staticmethod
-    async def authenticate_user(email: str, password: str, db_session: Session) -> Optional[User]:
+    def authenticate_user(email: str, password: str, db_session: Session) -> Optional[User]:
         """
         Authenticate user with email and password
         """
@@ -45,7 +47,7 @@ class AuthService:
         return user
 
     @staticmethod
-    async def create_access_token_for_user(user: User) -> str:
+    def create_access_token_for_user(user: User) -> str:
         """
         Create access token for authenticated user
         """

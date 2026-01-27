@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 from typing import Dict
-from ..deps import get_db_session, get_current_user
+from ..deps import get_db_session, get_current_active_user
 from ..services.auth_service import AuthService
 from ..models.user import UserCreate, UserLogin, UserResponse
 from datetime import timedelta
@@ -11,7 +11,7 @@ from ..core.security import create_access_token
 router = APIRouter()
 
 @router.post("/register", response_model=UserResponse)
-async def register(
+def register(
     user_data: UserCreate,
     db_session: Session = Depends(get_db_session)
 ):
@@ -20,7 +20,7 @@ async def register(
     """
     try:
         # Check if user already exists
-        existing_user = await AuthService.authenticate_user(user_data.email, user_data.password, db_session)
+        existing_user = AuthService.authenticate_user(user_data.email, user_data.password, db_session)
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -28,7 +28,7 @@ async def register(
             )
 
         # Register the user
-        db_user = await AuthService.register_user(user_data, db_session)
+        db_user = AuthService.register_user(user_data, db_session)
 
         # Create response without sensitive data
         return UserResponse(
@@ -46,14 +46,14 @@ async def register(
 
 
 @router.post("/login")
-async def login(
+def login(
     user_credentials: UserLogin,
     db_session: Session = Depends(get_db_session)
 ) -> Dict[str, str]:
     """
     Login a user and return an access token
     """
-    user = await AuthService.authenticate_user(
+    user = AuthService.authenticate_user(
         user_credentials.email,
         user_credentials.password,
         db_session
@@ -67,7 +67,7 @@ async def login(
         )
 
     # Create access token
-    access_token = await AuthService.create_access_token_for_user(user)
+    access_token = AuthService.create_access_token_for_user(user)
 
     return {
         "access_token": access_token,
@@ -78,8 +78,8 @@ async def login(
 
 
 @router.post("/refresh")
-async def refresh_token(
-    current_user: UserResponse = Depends(get_current_user)
+def refresh_token(
+    current_user: UserResponse = Depends(get_current_active_user)
 ) -> Dict[str, str]:
     """
     Refresh the access token

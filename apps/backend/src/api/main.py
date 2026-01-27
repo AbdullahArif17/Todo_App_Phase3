@@ -36,7 +36,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(SecurityHeadersMiddleware)
 
 # CORS middleware - allow specific origins based on environment
-allowed_origins = [origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",")]
+allowed_origins = settings.allowed_origins_list
 
 app.add_middleware(
     CORSMiddleware,
@@ -80,4 +80,4 @@ app.include_router(todos_router, prefix="/api/v1/todos", tags=["Todos"])
 @app.on_event("startup")
 def startup_event():
     logger.info(f"Application starting in {settings.ENVIRONMENT} mode")
-    logger.info(f"Allowed origins: {allowed_origins}")
+    logger.info(f"Allowed origins: {settings.allowed_origins_list}")

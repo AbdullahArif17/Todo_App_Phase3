@@ -21,6 +21,11 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# Clean up any existing __pycache__ directories and .pyc files
+RUN find /app -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+RUN find /app -type f -name "*.pyc" -delete 2>/dev/null || true
+RUN find /app -type f -name "*.pyo" -delete 2>/dev/null || true
+
 # Copy project
 COPY . .
 

@@ -1,6 +1,6 @@
 ---
 title: Todo Web Application Backend
-emoji: 📝
+emoji: 🚀
 colorFrom: blue
 colorTo: indigo
 sdk: docker
@@ -10,7 +10,7 @@ app_file: app.py
 pinned: false
 ---
 
-# Todo Web Application Backend
+# Todo Web Application Backend - Production Ready
 
 This is the backend API for a multi-user Todo web application built with FastAPI and SQLModel.
 

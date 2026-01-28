@@ -51,7 +51,8 @@
       "Bash(__NEW_LINE_570a5a7378624381__ rsync -av --exclude=\"__pycache__\" --exclude=\"*.pyc\" --exclude=\"*.pyo\" apps/backend/src/ todo-backend-production/src/)",
       "Bash(__NEW_LINE_570a5a7378624381__ rsync -av apps/backend/alembic/ todo-backend-production/alembic/)",
       "Bash(chmod +x apps/backend/start-prod.sh)",
-      "Bash(find apps/backend/src -type d -exec touch {}/__init__.py ;)"
+      "Bash(find apps/backend/src -type d -exec touch {}/__init__.py ;)",
+      "Bash(ls -la hf-backend*)"
     ]
   }
 }

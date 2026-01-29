@@ -7,6 +7,7 @@ from ..models.user import UserCreate, UserLogin, UserResponse
 from datetime import timedelta
 from ..core.config import settings
 from ..core.security import create_access_token
+from jose import JWTError
 
 router = APIRouter()
 
@@ -20,7 +21,7 @@ def register(
     """
     try:
         # Check if user already exists
-        existing_user = AuthService.authenticate_user(user_data.email, user_data.password, db_session)
+        existing_user = AuthService.get_user_by_email(user_data.email, db_session)
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,

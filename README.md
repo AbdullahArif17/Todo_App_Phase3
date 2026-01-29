@@ -87,45 +87,6 @@ apps/
 - ✅ Environment-based configuration
 - ✅ API documentation with Swagger UI
 
-### Quick Deploy
-
-For production deployment, see the [DEPLOYMENT_SUMMARY.md](./DEPLOYMENT_SUMMARY.md) file for complete deployment instructions across various platforms.
-
-### Environment Setup
-
-1. **Copy environment template**:
-   ```bash
-   cp .env.production .env
-   # Update the values in the .env file with your production settings
-   # IMPORTANT: Set a strong SECRET_KEY value
-   ```
-
-2. **Deploy with Docker Compose**:
-   ```bash
-   docker-compose -f docker-compose.prod.yml up -d --build
-   ```
-
-3. **Run database migrations**:
-   ```bash
-   docker-compose -f docker-compose.prod.yml exec backend alembic upgrade head
-   ```
-
-### Production Features
-
-- ✅ Complete user authentication system (register/login)
-- ✅ Secure JWT-based authentication with proper expiration
-- ✅ User-specific data isolation (users only see their own tasks)
-- ✅ Responsive UI for desktop and mobile devices
-- ✅ Production-grade security (CORS, rate limiting, input validation)
-- ✅ Docker containerization with optimized images
-- ✅ Nginx reverse proxy for performance and security
-- ✅ PostgreSQL database with connection pooling
-- ✅ Redis for caching and session storage
-- ✅ Structured logging with JSON format
-- ✅ Health check endpoints
-- ✅ Environment-based configuration
-- ✅ API documentation with Swagger UI
-
 ## API Endpoints
 
 ### Authentication
@@ -152,35 +113,6 @@ For production deployment, see the [DEPLOYMENT_SUMMARY.md](./DEPLOYMENT_SUMMARY.
 - CORS configuration for API security
 - User data isolation (each user sees only their own tasks)
 - Security headers (X-Frame-Options, X-Content-Type-Options, etc.)
-
-## Database Migrations
-
-The application uses Alembic for database migrations:
-
-```bash
-# From the backend directory
-cd apps/backend
-
-# Generate a new migration
-alembic revision --autogenerate -m "Description of changes"
-
-# Apply migrations
-alembic upgrade head
-```
-
-## Testing
-
-### Backend Tests
-```bash
-cd apps/backend
-pytest
-```
-
-### Frontend Tests
-```bash
-cd apps/frontend
-npm run test
-```
 
 ## Environment Variables
 
@@ -221,13 +153,6 @@ NODE_ENV=production
 - Database query optimization with proper indexing
 - Next.js production optimizations
 - Redis for caching and session storage
-
-## Monitoring & Health Checks
-
-- Health check endpoint at `/health`
-- Structured logging with JSON format
-- Performance monitoring ready
-- Error tracking and alerting
 
 ## Demo Credentials
 

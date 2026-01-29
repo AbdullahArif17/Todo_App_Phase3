@@ -11,6 +11,15 @@ from ..core.config import settings
 
 class AuthService:
     @staticmethod
+    def get_user_by_email(email: str, db_session: Session) -> Optional[User]:
+        """
+        Get a user by their email address
+        """
+        statement = select(User).where(User.email == email)
+        user = db_session.exec(statement).first()
+        return user
+
+    @staticmethod
     def register_user(user_data: UserCreate, db_session: Session) -> User:
         """
         Register a new user with hashed password

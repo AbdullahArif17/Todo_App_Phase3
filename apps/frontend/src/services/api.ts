@@ -7,6 +7,12 @@ class ApiService {
     const rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:7860';
     // Remove trailing slash if present to avoid double slashes when concatenating
     this.baseURL = rawBaseURL.endsWith('/') ? rawBaseURL.slice(0, -1) : rawBaseURL;
+
+    // Log the baseURL for debugging in development
+    if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      console.log('API Service BaseURL:', this.baseURL);
+    }
+
     this.timeout = 10000;
   }
 

@@ -5,7 +5,7 @@ from uuid import UUID
 from ..deps import get_current_user, get_db_session
 from ..models.user import User
 from ..models.todo_task import TodoTask, TodoTaskCreate, TodoTaskUpdate
-from ..services.todo_service import TodoService
+from ...services.todo_service import TodoService
 
 router = APIRouter()
 

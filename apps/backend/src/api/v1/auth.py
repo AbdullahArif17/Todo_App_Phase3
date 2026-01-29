@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 from typing import Dict
 from ..deps import get_db_session, get_current_active_user
-from ..services.auth_service import AuthService
+from ...services.auth_service import AuthService
 from ..models.user import UserCreate, UserLogin, UserResponse
 from datetime import timedelta
 from ..core.config import settings

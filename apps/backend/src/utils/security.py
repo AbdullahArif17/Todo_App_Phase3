@@ -5,21 +5,40 @@ from passlib.context import CryptContext
 from sqlmodel import Session, select
 from ..models.user import User
 from ..core.config import settings
+import hashlib
 
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def truncate_password_if_needed(password: str) -> str:
+    """
+    Truncate password to 72 bytes if needed to comply with bcrypt limitations
+    """
+    # Bcrypt has a 72-byte password limit
+    # We'll hash the password first to ensure it fits within bcrypt limits
+    if len(password.encode('utf-8')) > 72:
+        # If password is too long, create a hash of it that's within the limit
+        # This maintains security while fitting bcrypt requirements
+        hashed_pw = hashlib.sha256(password.encode()).hexdigest()
+        # Take first 72 characters of hex digest (which is 64 chars anyway)
+        return hashed_pw[:72]
+    return password
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
     Verify a plain password against a hashed password
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    # Ensure password is processed the same way for verification
+    safe_password = truncate_password_if_needed(plain_password)
+    return pwd_context.verify(safe_password, hashed_password)
 
 def get_password_hash(password: str) -> str:
     """
     Generate a hash for a plain password
     """
-    return pwd_context.hash(password)
+    # Ensure password is within bcrypt limits
+    safe_password = truncate_password_if_needed(password)
+    return pwd_context.hash(safe_password)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """

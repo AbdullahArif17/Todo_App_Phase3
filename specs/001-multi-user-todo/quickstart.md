@@ -87,7 +87,7 @@ cp .env.example .env.local
 Configure environment variables in `.env.local`:
 
 ```env
-NEXT_PUBLIC_API_BASE_URL="http://localhost:8000/api/v1"
+NEXT_PUBLIC_API_BASE_URL="http://localhost:7860/api/v1"
 NEXTAUTH_SECRET="your-nextauth-secret"
 NEXTAUTH_URL="http://localhost:3000"
 ```
@@ -123,7 +123,7 @@ From the backend directory:
 ```bash
 cd apps/backend
 source venv/bin/activate
-uvicorn src.api.main:app --reload --port 8000
+uvicorn src.api.main:app --reload --port 7860
 ```
 
 ### 4. Start the Frontend Server
@@ -137,7 +137,7 @@ npm run dev
 yarn dev
 ```
 
-The frontend will be available at `http://localhost:3000` and the backend API at `http://localhost:8000`.
+The frontend will be available at `http://localhost:3000` and the backend API at `http://localhost:7860`.
 
 ## Key Endpoints
 
@@ -241,5 +241,5 @@ Ensure the following environment variables are set in your production environmen
 ### Useful Commands
 
 - **Reset database**: `alembic downgrade base && alembic upgrade head`
-- **Check backend API**: `curl http://localhost:8000/health`
-- **View all todos for user**: `curl -H "Authorization: Bearer <token>" http://localhost:8000/api/v1/todos`
+- **Check backend API**: `curl http://localhost:7860/health`
+- **View all todos for user**: `curl -H "Authorization: Bearer <token>" http://localhost:7860/api/v1/todos`

@@ -4,7 +4,7 @@ import uvicorn
 
 # Application entry point for various deployment platforms
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8000))  # Default to 8000 unless specified otherwise
+    port = int(os.getenv("PORT", 7860))  # Default to 7860 for Hugging Face Spaces unless specified otherwise
     host = os.getenv("HOST", "0.0.0.0")
     uvicorn.run(
         app,

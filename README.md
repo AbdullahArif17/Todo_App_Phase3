@@ -50,7 +50,7 @@ apps/
 
 - Docker and Docker Compose
 - At least 2GB RAM available
-- Port 80 and 443 available (or 3000 and 8000 for development)
+- Port 80 and 443 available (or 3000 and 7860 for development)
 
 ### Production Setup
 

@@ -4,7 +4,7 @@ class ApiService {
   private timeout: number;
 
   constructor() {
-    this.baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+    this.baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:7860';
     this.timeout = 10000;
   }
 

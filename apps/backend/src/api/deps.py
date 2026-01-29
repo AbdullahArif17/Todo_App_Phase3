@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlmodel import Session
 from typing import Generator
 from ..database.engine import get_session
@@ -17,7 +17,7 @@ def get_db_session() -> Generator[Session, None, None]:
         yield session
 
 async def get_current_user(
-    token: str = Depends(security),
+    token: HTTPAuthorizationCredentials = Depends(security),
     db_session: Session = Depends(get_db_session)
 ) -> User:
     """
@@ -47,7 +47,7 @@ async def get_current_user(
     return user
 
 async def get_current_active_user(
-    token: str = Depends(security),
+    token: HTTPAuthorizationCredentials = Depends(security),
     db_session: Session = Depends(get_db_session)
 ) -> User:
     """

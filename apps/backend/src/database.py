@@ -45,9 +45,16 @@ def create_db_engine():
 # Create the global engine instance
 engine = create_db_engine()
 
-def get_session():
+from contextlib import contextmanager
+from typing import Generator
+
+@contextmanager
+def get_session() -> Generator[Session, None, None]:
     """
-    Generator that yields a database session
+    Context manager that provides a database session
     """
-    with Session(engine) as session:
+    session = Session(engine)
+    try:
         yield session
+    finally:
+        session.close()

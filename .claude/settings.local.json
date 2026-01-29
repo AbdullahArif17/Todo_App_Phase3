@@ -54,7 +54,9 @@
       "Bash(find apps/backend/src -type d -exec touch {}/__init__.py ;)",
       "Bash(ls -la hf-backend*)",
       "Bash(ls -la apps/backend/Dockerfile*)",
-      "Bash(docker build . -t todo-backend)"
+      "Bash(docker build . -t todo-backend)",
+      "Bash(find apps/backend/src -name \"*.py\" -type f -exec grep -l \"class.*User\" {} ;)",
+      "Bash(find apps/backend/src -name \"*.py\" -type f -exec grep -l \"TodoTask\\\\|class.*Todo\" {} ;)"
     ]
   }
 }

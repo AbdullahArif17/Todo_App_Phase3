@@ -4,8 +4,6 @@ from datetime import timedelta
 from uuid import UUID
 from ..models.user import User, UserCreate
 from ..utils.security import get_password_hash, verify_password
-from sqlmodel import select
-from uuid import UUID
 from ..core.security import create_access_token
 from ..core.config import settings
 

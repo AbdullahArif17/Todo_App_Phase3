@@ -61,7 +61,8 @@ class TodoService:
             setattr(todo, field, value)
 
         # Update timestamp
-        todo.updated_at = None  # This will trigger the onupdate in the model
+        from datetime import datetime
+        todo.updated_at = datetime.utcnow()
 
         # Commit changes
         db_session.add(todo)
@@ -102,7 +103,8 @@ class TodoService:
 
         # Update completion status
         todo.is_completed = is_completed
-        todo.updated_at = None  # This will trigger the onupdate in the model
+        from datetime import datetime
+        todo.updated_at = datetime.utcnow()
 
         # Commit changes
         db_session.add(todo)

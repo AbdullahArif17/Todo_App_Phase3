@@ -53,7 +53,8 @@
       "Bash(chmod +x apps/backend/start-prod.sh)",
       "Bash(find apps/backend/src -type d -exec touch {}/__init__.py ;)",
       "Bash(ls -la hf-backend*)",
-      "Bash(ls -la apps/backend/Dockerfile*)"
+      "Bash(ls -la apps/backend/Dockerfile*)",
+      "Bash(docker build . -t todo-backend)"
     ]
   }
 }

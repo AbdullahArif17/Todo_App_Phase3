@@ -80,7 +80,7 @@ export default function TodoListPage() {
     }
 
     try {
-      await apiService.delete<{}>(`/api/v1/todos/${id}`);
+      await apiService.delete<object>(`/api/v1/todos/${id}`);
       setTodos(todos.filter(todo => todo.id !== id));
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred while deleting todo';

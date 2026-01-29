@@ -89,6 +89,11 @@ class ApiService {
 
   async delete<T>(endpoint: string): Promise<T> {
     const response = await this.request(endpoint, { method: 'DELETE' });
+    // For DELETE requests, we might get an empty response
+    if (response.status === 204 || response.status === 200) {
+      // No content or successful deletion, return an empty object
+      return {} as T;
+    }
     return response.json();
   }
 }

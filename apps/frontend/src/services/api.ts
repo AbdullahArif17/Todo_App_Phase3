@@ -4,12 +4,17 @@ class ApiService {
   private timeout: number;
 
   constructor() {
-    this.baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:7860';
+    const rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:7860';
+    // Remove trailing slash if present to avoid double slashes when concatenating
+    this.baseURL = rawBaseURL.endsWith('/') ? rawBaseURL.slice(0, -1) : rawBaseURL;
     this.timeout = 10000;
   }
 
   private async request(endpoint: string, options: RequestInit = {}): Promise<Response> {
-    const url = `${this.baseURL}${endpoint}`;
+    // Ensure proper URL construction with proper slash handling
+    const normalizedBaseURL = this.baseURL.endsWith('/') ? this.baseURL.slice(0, -1) : this.baseURL;
+    const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = `${normalizedBaseURL}${normalizedEndpoint}`;
 
     const config: RequestInit = {
       headers: {

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import apiService from '../../../services/api';
 
 export default function SignInPage() {
   const [email, setEmail] = useState('');
@@ -18,19 +19,11 @@ export default function SignInPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/v1/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      // Use apiService which handles the base URL configuration
+      const data = await apiService.post<{ access_token: string }>('/api/v1/auth/login', {
+        email,
+        password,
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.detail || 'Login failed');
-      }
 
       // Store the token in localStorage or cookies
       localStorage.setItem('access_token', data.access_token);

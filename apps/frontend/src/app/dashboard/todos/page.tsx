@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import apiService from '../../../services/api';
 
 interface Todo {
   id: string;
@@ -32,18 +33,7 @@ export default function TodoListPage() {
 
   const fetchTodos = async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch('/api/v1/todos', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch todos');
-      }
-
-      const data = await response.json();
+      const data = await apiService.get<Todo[]>('/api/v1/todos');
       setTodos(data);
       setLoading(false);
     } catch (err: unknown) {
@@ -58,24 +48,10 @@ export default function TodoListPage() {
     setError('');
 
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch('/api/v1/todos', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: newTodo.title,
-          description: newTodo.description || null,
-        }),
+      const createdTodo = await apiService.post<Todo>('/api/v1/todos', {
+        title: newTodo.title,
+        description: newTodo.description || null,
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to add todo');
-      }
-
-      const createdTodo = await response.json();
       setTodos([...todos, createdTodo]);
       setNewTodo({ title: '', description: '' });
     } catch (err: unknown) {
@@ -86,21 +62,9 @@ export default function TodoListPage() {
 
   const toggleTodoCompletion = async (id: string, currentStatus: boolean) => {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`/api/v1/todos/${id}/complete`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ is_completed: !currentStatus }),
+      const updatedTodo = await apiService.patch<Todo>(`/api/v1/todos/${id}/complete`, {
+        is_completed: !currentStatus,
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to update todo');
-      }
-
-      const updatedTodo = await response.json();
       setTodos(todos.map(todo =>
         todo.id === id ? updatedTodo : todo
       ));
@@ -116,18 +80,7 @@ export default function TodoListPage() {
     }
 
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`/api/v1/todos/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete todo');
-      }
-
+      await apiService.delete<{}>(`/api/v1/todos/${id}`);
       setTodos(todos.filter(todo => todo.id !== id));
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred while deleting todo';

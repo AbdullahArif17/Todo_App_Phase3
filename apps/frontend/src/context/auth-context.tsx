@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import apiService from '../services/api';
 
 interface User {
   id: string;
@@ -32,55 +33,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const response = await fetch('/api/v1/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      // Use apiService which handles the base URL configuration
+      const data = await apiService.post<{ access_token: string; user?: User }>('/api/v1/auth/login', {
+        email,
+        password,
+      });
 
-    const data = await response.json();
+      // Store the token
+      localStorage.setItem('access_token', data.access_token);
 
-    if (!response.ok) {
-      throw new Error(data.detail || 'Login failed');
+      // Set user data if available in response
+      if (data.user) {
+        setUser(data.user);
+      }
+
+      setIsAuthenticated(true);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message || 'Login failed');
+      }
+      throw new Error('Login failed');
     }
-
-    // Store the token
-    localStorage.setItem('access_token', data.access_token);
-
-    // Set user data if available in response
-    if (data.user) {
-      setUser(data.user);
-    }
-
-    setIsAuthenticated(true);
   };
 
   const signup = async (email: string, password: string) => {
-    const response = await fetch('/api/v1/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      // Use apiService which handles the base URL configuration
+      const data = await apiService.post<{ access_token: string; user?: User }>('/api/v1/auth/register', {
+        email,
+        password,
+      });
 
-    const data = await response.json();
+      // Store the token
+      localStorage.setItem('access_token', data.access_token);
 
-    if (!response.ok) {
-      throw new Error(data.detail || 'Registration failed');
+      // Set user data if available in response
+      if (data.user) {
+        setUser(data.user);
+      }
+
+      setIsAuthenticated(true);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw new Error(error.message || 'Registration failed');
+      }
+      throw new Error('Registration failed');
     }
-
-    // Store the token
-    localStorage.setItem('access_token', data.access_token);
-
-    // Set user data if available in response
-    if (data.user) {
-      setUser(data.user);
-    }
-
-    setIsAuthenticated(true);
   };
 
   const logout = () => {

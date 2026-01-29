@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 from typing import List
 from uuid import UUID
-from ..deps import get_current_user, get_db_session
-from ...models.user import User
-from ...models.todo_task import TodoTask, TodoTaskCreate, TodoTaskUpdate
-from ...services.todo_service import TodoService
+from src.api.deps import get_current_user, get_db_session
+from src.models.user import User
+from src.models.todo_task import TodoTask, TodoTaskCreate, TodoTaskUpdate
+from src.services.todo_service import TodoService
 
 router = APIRouter()
 

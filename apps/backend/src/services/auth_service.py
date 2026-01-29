@@ -2,10 +2,10 @@ from sqlmodel import Session, select
 from typing import Optional
 from datetime import timedelta
 from uuid import UUID
-from ..models.user import User, UserCreate
-from ..utils.security import get_password_hash, verify_password
-from ..core.security import create_access_token
-from ..core.config import settings
+from src.models.user import User, UserCreate
+from src.utils.security import get_password_hash, verify_password
+from src.core.security import create_access_token
+from src.core.config import settings
 
 class AuthService:
     @staticmethod

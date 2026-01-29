@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 from typing import Dict
-from ..deps import get_db_session, get_current_active_user
-from ...services.auth_service import AuthService
-from ...models.user import UserCreate, UserLogin, UserResponse
+from src.api.deps import get_db_session, get_current_active_user
+from src.services.auth_service import AuthService
+from src.models.user import UserCreate, UserLogin, UserResponse
 from datetime import timedelta
-from ..core.config import settings
-from ..core.security import create_access_token
+from src.core.config import settings
+from src.core.security import create_access_token
 from jose import JWTError
 
 router = APIRouter()

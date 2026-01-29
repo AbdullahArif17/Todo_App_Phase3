@@ -2,9 +2,9 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlmodel import Session
 from typing import Generator
-from ..database import get_session
-from ...models.user import User
-from ...core.security import verify_token
+from src.database import get_session
+from src.models.user import User
+from src.core.security import verify_token
 from uuid import UUID
 
 security = HTTPBearer()

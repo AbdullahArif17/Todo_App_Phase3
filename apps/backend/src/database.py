@@ -1,5 +1,5 @@
 from sqlmodel import create_engine, Session
-from .core.config import settings
+from src.core.config import settings
 from sqlalchemy.pool import QueuePool
 import logging
 

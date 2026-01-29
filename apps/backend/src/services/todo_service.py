@@ -1,8 +1,8 @@
 from sqlmodel import Session, select
 from typing import List, Optional
 from uuid import UUID
-from ..models.todo_task import TodoTask, TodoTaskCreate, TodoTaskUpdate
-from ..models.user import User
+from src.models.todo_task import TodoTask, TodoTaskCreate, TodoTaskUpdate
+from src.models.user import User
 
 class TodoService:
     @staticmethod

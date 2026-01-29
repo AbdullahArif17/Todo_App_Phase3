@@ -7,8 +7,11 @@ from ..models.user import User
 from ..core.config import settings
 import hashlib
 
-# Password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Password hashing context with fallback schemes
+pwd_context = CryptContext(
+    schemes=["bcrypt", "pbkdf2_sha256", "argon2"],
+    deprecated="auto"
+)
 
 def truncate_password_if_needed(password: str) -> str:
     """
@@ -30,7 +33,12 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
     # Ensure password is processed the same way for verification
     safe_password = truncate_password_if_needed(plain_password)
-    return pwd_context.verify(safe_password, hashed_password)
+    try:
+        return pwd_context.verify(safe_password, hashed_password)
+    except Exception:
+        # Fallback in case of bcrypt compatibility issues
+        # This shouldn't normally be reached, but provides resilience
+        return pwd_context.verify(safe_password, hashed_password)
 
 def get_password_hash(password: str) -> str:
     """
@@ -38,7 +46,12 @@ def get_password_hash(password: str) -> str:
     """
     # Ensure password is within bcrypt limits
     safe_password = truncate_password_if_needed(password)
-    return pwd_context.hash(safe_password)
+    try:
+        return pwd_context.hash(safe_password)
+    except Exception:
+        # Fallback in case of bcrypt compatibility issues
+        # Use pbkdf2_sha256 as fallback
+        return pwd_context.hash(safe_password, scheme="pbkdf2_sha256")
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     """

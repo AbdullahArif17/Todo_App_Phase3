@@ -6,6 +6,11 @@ class ApiService {
   constructor() {
     let rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:7860';
 
+    // Log the raw URL from environment variable for debugging
+    if (typeof window !== 'undefined') {
+      console.log('Raw NEXT_PUBLIC_API_BASE_URL from env:', rawBaseURL);
+    }
+
     // Ensure HTTPS is used in production
     if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1')) {
       // In production, ensure the URL starts with https://
@@ -24,9 +29,9 @@ class ApiService {
     // Remove trailing slash if present to avoid double slashes when concatenating
     this.baseURL = rawBaseURL.endsWith('/') ? rawBaseURL.slice(0, -1) : rawBaseURL;
 
-    // Log the baseURL for debugging (will show in console in both dev and prod)
+    // Log the final processed URL for debugging (will show in console in both dev and prod)
     if (typeof window !== 'undefined') {
-      console.log('API Service BaseURL:', this.baseURL);
+      console.log('Final API Service BaseURL:', this.baseURL);
     }
 
     this.timeout = 10000;
@@ -37,6 +42,11 @@ class ApiService {
     const normalizedBaseURL = this.baseURL.endsWith('/') ? this.baseURL.slice(0, -1) : this.baseURL;
     const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const url = `${normalizedBaseURL}${normalizedEndpoint}`;
+
+    // Log the constructed URL for debugging in production
+    if (typeof window !== 'undefined') {
+      console.log('Making request to URL:', url);
+    }
 
     const config: RequestInit = {
       headers: {

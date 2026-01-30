@@ -14,13 +14,18 @@ class ApiService {
       } else if (rawBaseURL.startsWith('http://')) {
         rawBaseURL = rawBaseURL.replace('http://', 'https://');
       }
+
+      // Additional check: if it contains the Hugging Face domain, enforce HTTPS
+      if (rawBaseURL.includes('huggingface.co') || rawBaseURL.includes('.hf.space')) {
+        rawBaseURL = rawBaseURL.replace('http://', 'https://');
+      }
     }
 
     // Remove trailing slash if present to avoid double slashes when concatenating
     this.baseURL = rawBaseURL.endsWith('/') ? rawBaseURL.slice(0, -1) : rawBaseURL;
 
-    // Log the baseURL for debugging in development
-    if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+    // Log the baseURL for debugging (will show in console in both dev and prod)
+    if (typeof window !== 'undefined') {
       console.log('API Service BaseURL:', this.baseURL);
     }
 

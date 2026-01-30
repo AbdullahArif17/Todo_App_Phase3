@@ -50,7 +50,7 @@ app.add_middleware(
 
 # Trusted host middleware to prevent HTTP Host header attacks
 # Allow all hosts in development, restrict in production
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"] if settings.DEBUG else ["todo-app.com", "www.todo-app.com", "abdullah017-todoapp-phase2.hf.space"])
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"] if settings.DEBUG else ["todo-app.com", "www.todo-app.com", "abdullah017-todoapp-phase2.hf.space", "abdullah017-todoapp-phase2.hf.space."])
 
 @app.get("/")
 def read_root():

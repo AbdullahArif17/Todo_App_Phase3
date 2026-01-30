@@ -27,7 +27,11 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+
+        # Only add Strict-Transport-Security header if we're not in a proxy environment that might cause redirect loops
+        if not request.url.hostname.endswith('.hf.space'):
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+
         response.headers["Referrer-Policy"] = "no-referrer-when-downgrade"
         return response
 
@@ -76,6 +80,34 @@ from src.api.v1.todos import router as todos_router
 
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(todos_router, prefix="/api/v1/todos", tags=["Todos"])
+
+from starlette.middleware.trustedhost import TrustedHostMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from fastapi import HTTPException
+
+# Middleware to handle proxy headers properly for Hugging Face Spaces
+class ProxyHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        # Check for common proxy headers that indicate the original protocol
+        forwarded_proto = request.headers.get('x-forwarded-proto', '').lower()
+        if forwarded_proto == 'https':
+            # Update the request URL scheme to reflect HTTPS
+            request.scope['scheme'] = 'https'
+
+        forwarded_host = request.headers.get('x-forwarded-host')
+        if forwarded_host:
+            # Update the host header if forwarded
+            request.scope['headers'] = [
+                (k.lower(), v) if k.lower() != b'host' else (b'host', forwarded_host.encode())
+                for k, v in request.scope.get('headers', [])
+            ]
+
+        response = await call_next(request)
+        return response
+
+# Add the proxy headers middleware early in the stack
+app.add_middleware(ProxyHeadersMiddleware)
 
 # Add a startup event to log application start
 @app.on_event("startup")

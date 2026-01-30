@@ -92,17 +92,23 @@ async def delete_todo(
 @router.patch("/{todo_id}/complete")
 async def toggle_todo_completion(
     todo_id: UUID,
-    is_completed: bool,
     current_user: User = Depends(get_current_user),
     db_session: Session = Depends(get_db_session)
 ) -> TodoTask:
     """
     Toggle completion status of a specific todo task (user must own the task)
     """
-    todo = await TodoService.toggle_todo_completion(todo_id, is_completed, current_user, db_session)
-    if not todo:
+    # Get the current todo to check its current completion status
+    current_todo = await TodoService.get_todo_by_id(todo_id, current_user, db_session)
+    if not current_todo:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Todo task not found"
         )
+
+    # Toggle the completion status
+    new_completion_status = not current_todo.is_completed
+
+    # Update using the service
+    todo = await TodoService.toggle_todo_completion(todo_id, new_completion_status, current_user, db_session)
     return todo

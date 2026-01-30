@@ -56,7 +56,12 @@
       "Bash(ls -la apps/backend/Dockerfile*)",
       "Bash(docker build . -t todo-backend)",
       "Bash(find apps/backend/src -name \"*.py\" -type f -exec grep -l \"class.*User\" {} ;)",
-      "Bash(find apps/backend/src -name \"*.py\" -type f -exec grep -l \"TodoTask\\\\|class.*Todo\" {} ;)"
+      "Bash(find apps/backend/src -name \"*.py\" -type f -exec grep -l \"TodoTask\\\\|class.*Todo\" {} ;)",
+      "Bash(ls -la apps/frontend/src/app/\\\\\\(auth\\\\\\)/)",
+      "Bash(ls -la \"apps/frontend/src/app/\\(auth\\)\")",
+      "Bash(cat \"apps/frontend/src/app/\\(auth\\)/sign-in/page.tsx\")",
+      "Bash(npm install @tailwindcss/forms @tailwindcss/typography)",
+      "Bash(npm install next-font @tailwindcss/forms @tailwindcss/typography)"
     ]
   }
 }

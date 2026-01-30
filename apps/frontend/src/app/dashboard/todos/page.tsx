@@ -62,9 +62,7 @@ export default function TodoListPage() {
 
   const toggleTodoCompletion = async (id: string, currentStatus: boolean) => {
     try {
-      const updatedTodo = await apiService.patch<Todo>(`/api/v1/todos/${id}/complete`, {
-        is_completed: !currentStatus,
-      });
+      const updatedTodo = await apiService.patch<Todo>(`/api/v1/todos/${id}/complete`);
       setTodos(todos.map(todo =>
         todo.id === id ? updatedTodo : todo
       ));
@@ -102,17 +100,17 @@ export default function TodoListPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
+    <div className="min-h-screen bg-background">
+      <nav className="bg-card border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">Todo App</h1>
+              <h1 className="text-xl font-semibold text-foreground">Todo App</h1>
             </div>
             <div className="flex items-center">
               <button
                 onClick={handleLogout}
-                className="ml-4 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className="ml-4 px-4 py-2 text-sm font-medium text-destructive-foreground bg-destructive hover:bg-destructive/90 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-destructive transition-colors"
               >
                 Logout
               </button>
@@ -123,17 +121,17 @@ export default function TodoListPage() {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <div className="border-4 border-dashed border-gray-200 rounded-lg p-6">
+          <div className="border border-border rounded-lg p-6 bg-card shadow-sm">
             {error && (
-              <div className="mb-4 rounded-md bg-red-50 p-4">
-                <div className="text-sm text-red-700">{error}</div>
+              <div className="mb-4 rounded-md bg-destructive/10 p-4 border border-destructive/30">
+                <div className="text-sm text-destructive-foreground">{error}</div>
               </div>
             )}
 
             <form onSubmit={handleAddTodo} className="mb-8">
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="title" className="block text-sm font-medium text-foreground mb-1">
                     Title *
                   </label>
                   <input
@@ -142,11 +140,11 @@ export default function TodoListPage() {
                     value={newTodo.title}
                     onChange={(e) => setNewTodo({...newTodo, title: e.target.value})}
                     required
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="mt-1 block w-full rounded-md border border-input bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors sm:text-sm"
                   />
                 </div>
                 <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="description" className="block text-sm font-medium text-foreground mb-1">
                     Description
                   </label>
                   <input
@@ -154,14 +152,14 @@ export default function TodoListPage() {
                     id="description"
                     value={newTodo.description}
                     onChange={(e) => setNewTodo({...newTodo, description: e.target.value})}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="mt-1 block w-full rounded-md border border-input bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors sm:text-sm"
                   />
                 </div>
               </div>
               <div className="mt-4">
                 <button
                   type="submit"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors"
                 >
                   Add Todo
                 </button>
@@ -169,34 +167,42 @@ export default function TodoListPage() {
             </form>
 
             <div className="mt-6">
-              <h2 className="text-lg font-medium text-gray-900">Your Todos</h2>
-              <ul className="mt-4 space-y-2">
+              <h2 className="text-lg font-semibold text-foreground">Your Todos</h2>
+              <ul className="mt-4 space-y-3">
                 {todos.length === 0 ? (
-                  <li className="text-gray-500 italic">No todos yet. Add one above!</li>
+                  <li className="text-muted-foreground italic py-8 text-center">No todos yet. Add one above!</li>
                 ) : (
                   todos.map((todo) => (
-                    <li key={todo.id} className="flex items-center justify-between p-4 bg-white rounded-md shadow-sm">
+                    <li
+                      key={todo.id}
+                      className={`flex items-center justify-between p-4 bg-background border border-border rounded-lg transition-all ${
+                        todo.is_completed ? 'opacity-70' : 'hover:bg-muted/50'
+                      }`}
+                    >
                       <div className="flex items-center">
                         <input
                           type="checkbox"
                           checked={todo.is_completed}
                           onChange={() => toggleTodoCompletion(todo.id, todo.is_completed)}
-                          className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                          className="h-4 w-4 text-primary border-input rounded focus:ring-primary focus:ring-2"
                         />
-                        <span className={`ml-3 ${todo.is_completed ? 'line-through text-gray-500' : 'text-gray-700'}`}>
-                          {todo.title}
+                        <span className={`ml-3 ${todo.is_completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                          <span className="font-medium">{todo.title}</span>
+                          {todo.description && (
+                            <p className="text-sm text-muted-foreground mt-1">{todo.description}</p>
+                          )}
                         </span>
                       </div>
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-3">
                         <button
                           onClick={() => toggleTodoCompletion(todo.id, todo.is_completed)}
-                          className="text-sm font-medium text-blue-600 hover:text-blue-900"
+                          className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                         >
                           {todo.is_completed ? 'Undo' : 'Complete'}
                         </button>
                         <button
                           onClick={() => deleteTodo(todo.id)}
-                          className="text-sm font-medium text-red-600 hover:text-red-900"
+                          className="text-sm font-medium text-destructive hover:text-destructive/80 transition-colors"
                         >
                           Delete
                         </button>

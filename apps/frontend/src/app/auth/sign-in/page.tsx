@@ -111,7 +111,7 @@ export default function SignInPage() {
         </form>
         <div className="text-center">
           <Link href="/auth/sign-up" className="font-medium text-primary hover:text-primary/80 transition-colors">
-            Don't have an account? <span className="underline">Sign up</span>
+            Don&apos;t have an account? <span className="underline">Sign up</span>
           </Link>
         </div>
       </div>

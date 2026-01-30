@@ -60,7 +60,7 @@ export default function TodoListPage() {
     }
   };
 
-  const toggleTodoCompletion = async (id: string, currentStatus: boolean) => {
+  const toggleTodoCompletion = async (id: string) => {
     try {
       const updatedTodo = await apiService.patch<Todo>(`/api/v1/todos/${id}/complete`);
       setTodos(todos.map(todo =>
@@ -183,7 +183,7 @@ export default function TodoListPage() {
                         <input
                           type="checkbox"
                           checked={todo.is_completed}
-                          onChange={() => toggleTodoCompletion(todo.id, todo.is_completed)}
+                          onChange={() => toggleTodoCompletion(todo.id)}
                           className="h-4 w-4 text-primary border-input rounded focus:ring-primary focus:ring-2"
                         />
                         <span className={`ml-3 ${todo.is_completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
@@ -195,7 +195,7 @@ export default function TodoListPage() {
                       </div>
                       <div className="flex space-x-3">
                         <button
-                          onClick={() => toggleTodoCompletion(todo.id, todo.is_completed)}
+                          onClick={() => toggleTodoCompletion(todo.id)}
                           className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                         >
                           {todo.is_completed ? 'Undo' : 'Complete'}

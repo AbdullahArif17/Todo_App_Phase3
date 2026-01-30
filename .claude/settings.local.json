@@ -61,7 +61,9 @@
       "Bash(ls -la \"apps/frontend/src/app/\\(auth\\)\")",
       "Bash(cat \"apps/frontend/src/app/\\(auth\\)/sign-in/page.tsx\")",
       "Bash(npm install @tailwindcss/forms @tailwindcss/typography)",
-      "Bash(npm install next-font @tailwindcss/forms @tailwindcss/typography)"
+      "Bash(npm install next-font @tailwindcss/forms @tailwindcss/typography)",
+      "Bash(pkill -f tail)",
+      "Bash(npx eslint src/app/auth/sign-in/page.tsx src/app/dashboard/todos/page.tsx)"
     ]
   }
 }

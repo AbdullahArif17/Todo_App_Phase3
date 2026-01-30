@@ -4,7 +4,18 @@ class ApiService {
   private timeout: number;
 
   constructor() {
-    const rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:7860';
+    let rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:7860';
+
+    // Ensure HTTPS is used in production
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1')) {
+      // In production, ensure the URL starts with https://
+      if (!rawBaseURL.startsWith('https://') && !rawBaseURL.startsWith('http://')) {
+        rawBaseURL = 'https://' + rawBaseURL;
+      } else if (rawBaseURL.startsWith('http://')) {
+        rawBaseURL = rawBaseURL.replace('http://', 'https://');
+      }
+    }
+
     // Remove trailing slash if present to avoid double slashes when concatenating
     this.baseURL = rawBaseURL.endsWith('/') ? rawBaseURL.slice(0, -1) : rawBaseURL;
 

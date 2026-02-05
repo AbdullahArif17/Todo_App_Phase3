@@ -1,4 +1,4 @@
-# Data Model: Stateless Chat Architecture
+# Data Model: Todo AI Chatbot
 
 ## Entities
 
@@ -23,13 +23,14 @@ Represents a chat session between a user and the AI assistant, containing a sequ
 - Many-to-one with User (conversation belongs to one user)
 - Self-referencing optional (parent_conversation_id points to another conversation)
 
-**Validation Rules**:
-- `user_id` must reference an existing user
-- `title` must be 1-200 characters
-- `created_at` is set automatically on creation
-- `updated_at` is updated automatically on changes
-- `message_count` must be non-negative
-- `branch_depth` must be non-negative
+**Indexes**:
+- Primary index on `id`
+- Index on `user_id` for efficient user conversation queries
+- Index on `created_at` for chronological queries
+- Index on `last_activity` for recency-based queries
+- Index on `message_count` for performance filtering
+- Index on `is_archived` for filtering archived conversations
+- Composite index on `(user_id, last_activity)` for efficient user conversation queries sorted by recency
 
 ### Message
 A single communication in a conversation, either from the user or the AI assistant, with content and metadata.
@@ -42,21 +43,22 @@ A single communication in a conversation, either from the user or the AI assista
 - `timestamp`: DateTime - When the message was created
 - `created_at`: DateTime - When the record was created in the database
 - `updated_at`: DateTime - When the record was last updated
-- `tool_calls`: JSON (nullable) - Information about tools called during AI processing
-- `tool_results`: JSON (nullable) - Results from tools called during AI processing
+- `tool_calls`: String (nullable) - JSON string of tool calls made during AI processing
+- `tool_results`: String (nullable) - JSON string of tool results from AI processing
 - `needs_clarification`: Boolean - Whether the agent needs clarification from the user (default: false)
 
 **Relationships**:
 - Many-to-one with Conversation (message belongs to one conversation)
 - Through conversation, indirectly related to User
 
-**Validation Rules**:
-- `conversation_id` must reference an existing conversation
-- `role` must be one of "user", "assistant", or "system"
-- `content` must be 1-10,000 characters
-- `timestamp` is set automatically on creation
-- `tool_calls` must be valid JSON if present
-- `tool_results` must be valid JSON if present
+**Indexes**:
+- Primary index on `id`
+- Index on `conversation_id` for efficient conversation message queries
+- Index on `role` for filtering by message type
+- Index on `timestamp` for chronological queries
+- Index on `needs_clarification` for identifying messages requiring follow-up
+- Composite index on `(conversation_id, timestamp)` for chronological message retrieval within conversations
+- Composite index on `(conversation_id, role)` for filtering messages by role within conversations
 
 ### User
 An authenticated entity that owns conversations and has permissions to access only their own data. (This entity likely already exists in the system.)
@@ -72,11 +74,6 @@ An authenticated entity that owns conversations and has permissions to access on
 **Relationships**:
 - One-to-many with Conversation (user has many conversations)
 
-**Validation Rules**:
-- `email` must be a valid email format and unique
-- `hashed_password` must be properly hashed
-- `is_active` defaults to true
-
 ## Relationships
 
 ### Conversation ↔ Message
@@ -88,19 +85,6 @@ An authenticated entity that owns conversations and has permissions to access on
 - One User has many Conversations (1:N relationship)
 - Foreign key: `user_id` in Conversation table references `id` in User table
 - When a user is deleted, their conversations are also deleted
-
-## Indexes
-
-### Conversation Table
-- Primary index on `id` (UUID)
-- Composite index on `(user_id, last_activity)` for efficient user conversation queries sorted by recency
-- Index on `created_at` for chronological queries
-
-### Message Table
-- Primary index on `id` (UUID)
-- Index on `conversation_id` for efficient conversation message queries
-- Composite index on `(conversation_id, timestamp)` for chronological message retrieval within conversations
-- Index on `timestamp` for temporal queries
 
 ## State Transitions
 
@@ -123,3 +107,9 @@ An authenticated entity that owns conversations and has permissions to access on
 - Conversation message_count is updated automatically when messages are added/deleted
 - Conversation last_activity is updated automatically when new messages are added
 - User ownership is validated on all conversation and message access operations
+
+### Performance Considerations
+- Proper indexing on frequently queried fields
+- Efficient querying patterns for conversation history retrieval
+- Pagination support for large conversation histories
+- Message truncation mechanisms for token management

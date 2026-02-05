@@ -134,6 +134,7 @@ class ApiService {
     return response.json();
   }
 }
+}
 
 const apiService = new ApiService();
 export default apiService;

@@ -26,7 +26,7 @@ description: "Task list for Stateless Chat API Endpoint with AI Agent feature im
 
 **Purpose**: Project initialization and basic structure
 
-- [X] T001 Install OpenAI Agents SDK dependencies in requirements.txt
+- [X] T001 Install OpenAI Agents SDK dependencies in apps/backend/requirements.txt
 - [X] T002 [P] Update configuration to include AI agent settings in apps/backend/src/core/config.py
 - [X] T003 [P] Create agent directory structure in apps/backend/src/agents/
 
@@ -55,14 +55,14 @@ description: "Task list for Stateless Chat API Endpoint with AI Agent feature im
 
 ### Implementation for User Story 1
 
-- [X] T010 [P] [US1] Implement new conversation creation logic in apps/backend/src/services/chat_service.py
-- [X] T011 [US1] Build POST /api/{user_id}/chat endpoint with authentication in apps/backend/src/api/v1/chat.py
-- [X] T012 [US1] Integrate Todo Agent execution within the endpoint in apps/backend/src/api/v1/chat.py
-- [X] T013 [US1] Implement message persistence for user input in apps/backend/src/services/chat_service.py
-- [X] T014 [US1] Execute agent with conversation context for new chats in apps/backend/src/agents/todo_agent.py
-- [X] T015 [US1] Implement AI response persistence in apps/backend/src/services/chat_service.py
-- [X] T016 [US1] Return structured chat responses with metadata in apps/backend/src/api/v1/chat.py
-- [X] T017 [US1] Add validation for message content and length limits in apps/backend/src/api/v1/chat.py
+- [X] T010 [P] [US1] Implement agent initialization with todo instructions in apps/backend/src/agents/todo_agent.py
+- [X] T011 [US1] Integrate agent with chat endpoint authentication from existing auth system
+- [X] T012 [US1] Implement new conversation creation logic with agent context in ChatService
+- [X] T013 [US1] Implement message persistence for user input with agent integration in ChatService
+- [X] T014 [US1] Execute agent with proper conversation context for new chats in todo_agent.py
+- [X] T015 [US1] Implement AI response persistence from agent output in ChatService
+- [X] T016 [US1] Return proper response format with conversation_id and agent response text
+- [X] T017 [US1] Add validation for message content with agent readiness checks
 
 **Checkpoint**: At this point, User Story 1 should be fully functional and testable independently
 
@@ -160,8 +160,8 @@ description: "Task list for Stateless Chat API Endpoint with AI Agent feature im
 
 ### Within Each User Story
 
-- Database models before service layer
-- Service layer before API endpoints
+- Agent initialization before service integration
+- Service integration before endpoint integration
 - Core functionality before integration
 - Story complete before moving to next priority
 
@@ -178,9 +178,9 @@ description: "Task list for Stateless Chat API Endpoint with AI Agent feature im
 
 ```bash
 # Launch all parallel tasks for User Story 1 together:
-Task: "Implement new conversation creation logic in apps/backend/src/services/chat_service.py"
-Task: "Build POST /api/{user_id}/chat endpoint with authentication in apps/backend/src/api/v1/chat.py"
-Task: "Implement message persistence for user input in apps/backend/src/services/chat_service.py"
+Task: "Implement agent initialization with todo instructions in apps/backend/src/agents/todo_agent.py"
+Task: "Integrate agent with chat endpoint authentication from existing auth system"
+Task: "Implement new conversation creation logic with agent context in ChatService"
 ```
 
 ---

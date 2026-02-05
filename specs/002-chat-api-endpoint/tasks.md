@@ -122,21 +122,21 @@ description: "Task list for Stateless Chat API Endpoint with AI Agent feature im
 - [X] T036 [P] Update chat API methods with agent response handling in apps/frontend/src/services/chat-service.ts
 - [X] T037 Enhance chat UI component with agent status indicators at apps/frontend/src/app/dashboard/chat/page.tsx
 - [X] T038 Implement real-time agent response handling in frontend
-- [ ] T039 Add conversation context preservation in frontend state with agent awareness
-- [ ] T040 Integrate with existing authentication context in frontend for agent access
+- [X] T039 Add conversation context preservation in frontend state with agent awareness
+- [X] T040 Integrate with existing authentication context in frontend for agent access
 
 ---
 ## Phase 8: Polish & Cross-Cutting Concerns
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T041 [P] Add comprehensive error handling for agent service unavailability with graceful fallbacks
-- [ ] T042 Add monitoring and logging for agent operations and tool usage
-- [ ] T043 [P] Performance optimization for agent response times and conversation loading
-- [ ] T044 [P] Add validation and sanitization for message length limits with agent constraints
-- [ ] T045 Security hardening for prompt injection prevention in agent interactions
-- [ ] T046 Run end-to-end tests for all user stories with agent integration
-- [ ] T047 Documentation updates for agent-integrated chat API endpoints
+- [X] T041 [P] Add comprehensive error handling for agent service unavailability with graceful fallbacks
+- [X] T042 Add monitoring and logging for agent operations and tool usage
+- [X] T043 [P] Performance optimization for agent response times and conversation loading
+- [X] T044 [P] Add validation and sanitization for message length limits with agent constraints
+- [X] T045 Security hardening for prompt injection prevention in agent interactions
+- [X] T046 Run end-to-end tests for all user stories with agent integration
+- [X] T047 Documentation updates for agent-integrated chat API endpoints
 
 ---
 ## Dependencies & Execution Order

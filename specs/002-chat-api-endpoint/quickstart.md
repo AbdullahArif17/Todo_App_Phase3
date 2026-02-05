@@ -32,7 +32,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 # Create environment file
-cp .env.example .env
+cp ../backend.env.example .env
 # Edit .env with your actual configuration values
 ```
 
@@ -45,7 +45,7 @@ cd apps/frontend
 npm install
 
 # Create environment file
-cp .env.example .env.local
+cp ../frontend.env.example .env.local
 # Edit .env.local with your actual configuration values
 ```
 
@@ -140,7 +140,7 @@ The system exposes the following tools via MCP for the AI agent:
 - Parameters: user_id (string), task_id (string), title (optional string), description (optional string), is_completed (optional boolean)
 
 ### complete_task
-- Marks a task as complete or incomplete
+- Marks a task as complete or incomplete for a user
 - Parameters: user_id (string), task_id (string), is_completed (optional boolean, default: true)
 
 ### delete_task

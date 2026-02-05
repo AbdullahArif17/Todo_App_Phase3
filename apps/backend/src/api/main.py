@@ -103,8 +103,8 @@ class ProxyHeadersMiddleware(BaseHTTPMiddleware):
         if forwarded_host:
             # Update the host header if forwarded
             request.scope['headers'] = [
-                (k.lower(), v) if k.lower() != b'host' else (b'host', forwarded_host.encode())
-                for k, v in request.scope.get('headers', [])
+                (k.decode('utf-8') if isinstance(k, bytes) else k, v) if (k.lower() if isinstance(k, str) else k.decode('utf-8').lower()) != b'host'.decode('utf-8') else (b'host'.decode('utf-8'), forwarded_host)
+                for k, v in [(h[0], h[1].decode('utf-8')) for h in request.scope.get('headers', [])]
             ]
 
         response = await call_next(request)

@@ -17,14 +17,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy application code
 COPY apps/backend/src/ ./src/
 COPY apps/backend/main.py ./main.py
-COPY apps/backend/src/mcp_server/ ./src/mcp_server/
-COPY apps/backend/src/agents/ ./src/agents/
-COPY apps/backend/src/services/ ./src/services/
-COPY apps/backend/src/models/ ./src/models/
-COPY apps/backend/src/utils/ ./src/utils/
-COPY apps/backend/src/core/ ./src/core/
-COPY apps/backend/src/database.py ./src/database.py
-COPY apps/backend/src/api/ ./src/api/
+COPY apps/backend/startup.py ./startup.py
+COPY apps/backend/requirements.txt ./requirements.txt
 COPY .env.example .env
 
 # Set environment variables
@@ -49,4 +43,4 @@ RUN find . -type f -name "*.pyo" -delete 2>/dev/null || true
 USER appuser
 
 # Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["python", "startup.py"]

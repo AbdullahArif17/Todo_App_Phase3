@@ -70,7 +70,8 @@
       "Bash(ls -la specs/001*)",
       "Bash(find . -name \"*.py\" -exec grep -l \"session.exec\" {} ;)",
       "Bash(.specify/scripts/bash/create-new-feature.sh --json --number 2 --short-name \"chat-api-endpoint\" --description \"Add a stateless chat API endpoint that enables conversational todo management.\n\nThe system must:\n- Expose POST /api/{user_id}/chat\n- Accept natural language messages from the user\n- Support existing and new conversations\n- Persist all conversation data in the database\n- Remain fully stateless between requests\n\nChat behavior:\n- If conversation_id is not provided, create a new conversation\n- Load full conversation history from the database for each request\n- Append the new user message to the conversation\n- Pass conversation history + new message to the AI agent\n- Store the assistant response in the database\n- Return conversation_id, response text, and tool usage metadata\n\nConstraints:\n- The server must not store in-memory chat state\n- Conversation continuity must survive server restarts\n- Enforce user ownership on all conversation data\")",
-      "Bash(find specs/002-chat-api-endpoint/ -name \"*.md\" -exec echo \"File: {}\" ; -exec head -n 5 {} ;)"
+      "Bash(find specs/002-chat-api-endpoint/ -name \"*.md\" -exec echo \"File: {}\" ; -exec head -n 5 {} ;)",
+      "Bash(find:*)"
     ]
   }
 }

@@ -1,4 +1,3 @@
-import api from './api';
 
 export interface ChatRequest {
   conversation_id?: string;
@@ -102,7 +101,17 @@ class ChatService {
     }
   }
 
-  async searchConversations(userId: string, query: string, limit: number = 20, offset: number = 0): Promise<any> {
+export interface SearchResultsResponse {
+    query: string;
+    conversations: Conversation[];
+    messages: Message[];
+    total_conversation_results: number;
+    total_message_results: number;
+    limit: number;
+    offset: number;
+  }
+
+  async searchConversations(userId: string, query: string, limit: number = 20, offset: number = 0): Promise<SearchResultsResponse> {
     try {
       const token = localStorage.getItem('access_token');
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7860'}/api/${userId}/search?query=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`, {
@@ -117,7 +126,18 @@ class ChatService {
         throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
       }
 
-      return response.json();
+      const result = await response.json();
+
+      // Return properly structured result
+      return {
+        query: result.query || query,
+        conversations: result.conversations || [],
+        messages: result.messages || [],
+        total_conversation_results: result.total_conversation_results || 0,
+        total_message_results: result.total_message_results || 0,
+        limit: result.limit || limit,
+        offset: result.offset || offset
+      };
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
       throw new Error(errorMessage || 'Failed to search conversations');

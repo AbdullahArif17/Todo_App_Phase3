@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
-import chatService, { ChatRequest, ChatResponse, Message } from '@/services/chat-service';
+import chatService, { SearchResultsResponse } from '@/services/chat-service';
 
 const ChatPage = () => {
   const [message, setMessage] = useState('');
@@ -11,7 +11,14 @@ const ChatPage = () => {
   const [messages, setMessages] = useState<{id: string, role: string, content: string, timestamp: Date}[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  interface SearchResult {
+    id: string;
+    role: string;
+    content: string;
+    timestamp: string;
+  }
+
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
 
@@ -174,7 +181,7 @@ const ChatPage = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-gray-500 text-sm">No results found for "{searchQuery}"</div>
+                <div className="text-gray-500 text-sm">No results found for &quot;{searchQuery}&quot;</div>
               )}
             </div>
           )}

@@ -32,7 +32,6 @@ COPY main.py ./main.py
 COPY production.py ./production.py
 COPY config.py ./config.py
 COPY gunicorn.conf.py ./gunicorn.conf.py
-COPY .env.example ./.env
 
 # Clean up Python cache files to reduce image size
 RUN find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
@@ -51,6 +50,5 @@ EXPOSE 7860
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:7860/health || exit 1
 
-# Make startup script executable and run it
-RUN chmod +x /app/startup.sh
-CMD ["/app/startup.sh"]
+# Run the application
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]

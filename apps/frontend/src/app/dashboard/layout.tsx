@@ -15,6 +15,26 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     logout();
   };
 
+  // Redirect to login if not authenticated
+  if (!isAuthenticated || !user) {
+    // For now, we'll just render a simple message
+    // In a real implementation, you would use next/router to redirect
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-foreground mb-4">Authentication Required</h1>
+          <p className="text-muted-foreground mb-4">Please sign in to access the dashboard</p>
+          <Link
+            href="/auth/sign-in"
+            className="inline-block px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+          >
+            Sign In
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <nav className="bg-card border-b border-border">

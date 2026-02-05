@@ -1,16 +1,4 @@
----
-title: Todo AI Chatbot Backend
-emoji: 🤖
-colorFrom: blue
-colorTo: indigo
-sdk: docker
-sdk_version: "3.8"
-python_version: "3.11"
-app_file: app.py
-pinned: false
----
-
-# Todo AI Chatbot Backend - Production Ready
+# Todo AI Backend - Production Ready
 
 This is the backend API for an AI-powered Todo chatbot that enables natural language interaction with todo management using MCP tools and OpenAI Agents SDK.
 
@@ -45,7 +33,7 @@ This is the backend API for an AI-powered Todo chatbot that enables natural lang
 
 ## Environment Variables
 
-Set these environment variables in your Space settings:
+Set these environment variables:
 
 ```
 DATABASE_URL=postgresql://username:password@your-db-url.com:5432/dbname
@@ -80,11 +68,10 @@ AI_RATE_LIMIT_PER_MINUTE=30
 - **Stateless**: No server-side memory between requests - all state flows through database
 - **Security**: All operations validated through user authentication and authorization
 
-## Support
+## Deployment
 
-For support, check the Space logs in the Hugging Face interface. If you encounter issues with the build, verify that:
-- All environment variables are properly set (especially OPENAI_API_KEY)
-- Database connection string is correct
-- No typos in configuration values
-- Sufficient hardware resources allocated to the Space
-- Frontend domain is added to OpenAI's domain allowlist if using ChatKit
+This backend is designed for deployment to Hugging Face Spaces with Docker. Make sure to:
+1. Set the required environment variables in your Space settings
+2. Ensure your domain is added to OpenAI's domain allowlist if using ChatKit
+3. Configure the Neon database connection properly
+4. Test the health endpoint after deployment

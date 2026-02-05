@@ -17,6 +17,9 @@ class User(UserBase, table=True):
     # Relationship with todos
     todos: List["TodoTask"] = Relationship(back_populates="owner", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
+    # Relationship with templates
+    templates: List["Template"] = Relationship(back_populates="user", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+
 # Model for creating a new user
 class UserCreate(UserBase):
     password: str

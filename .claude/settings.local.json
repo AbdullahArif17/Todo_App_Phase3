@@ -63,7 +63,14 @@
       "Bash(npm install @tailwindcss/forms @tailwindcss/typography)",
       "Bash(npm install next-font @tailwindcss/forms @tailwindcss/typography)",
       "Bash(pkill -f tail)",
-      "Bash(npx eslint src/app/auth/sign-in/page.tsx src/app/dashboard/todos/page.tsx)"
+      "Bash(npx eslint src/app/auth/sign-in/page.tsx src/app/dashboard/todos/page.tsx)",
+      "Bash(.specify/scripts/bash/create-new-feature.sh --json '# Feature: AI Chat Endpoint\n\n## Goal\nProvide a stateless HTTP API endpoint that accepts user messages and returns AI-generated responses for managing todos.\n\n## Description\nThe backend exposes a single chat endpoint that:\n- Receives a natural language message\n- Loads conversation history from the database\n- Runs an AI agent to decide actions\n- Returns the assistant response\n- Does not store any in-memory state\n\n## Endpoint\nPOST /api/{user_id}/chat\n\n## Request\n- conversation_id \\(optional\\): integer\n- message \\(required\\): string\n\n## Behavior\n- If conversation_id is missing, create a new conversation\n- Persist user message before agent execution\n- Build agent context using stored messages\n- Execute AI agent\n- Persist assistant response\n- Return conversation_id and response text\n\n## Constraints\n- Server must remain stateless\n- No business logic inside the endpoint\n- All task operations must be delegated to tools\n- Authentication is required\n\n## Acceptance Criteria\n- Endpoint returns valid AI responses\n- Conversations survive server restarts\n- Multiple concurrent chats work correctly\n- Unauthorized requests are rejected' --number 1 --short-name \"ai-chat-endpoint\")",
+      "Bash(find /mnt/d/giaic/Todo_App_Phase3/apps/backend/src -name \"*.py\" -exec grep -l \"chat\\\\|Chat\\\\|conversation\" {} ;)",
+      "Bash(find . -name \"*.py\" -type f -exec grep -l \"ChatService\\\\|chat_service\" {} ;)",
+      "Bash(ls -la specs/001*)",
+      "Bash(find . -name \"*.py\" -exec grep -l \"session.exec\" {} ;)",
+      "Bash(.specify/scripts/bash/create-new-feature.sh --json --number 2 --short-name \"chat-api-endpoint\" --description \"Add a stateless chat API endpoint that enables conversational todo management.\n\nThe system must:\n- Expose POST /api/{user_id}/chat\n- Accept natural language messages from the user\n- Support existing and new conversations\n- Persist all conversation data in the database\n- Remain fully stateless between requests\n\nChat behavior:\n- If conversation_id is not provided, create a new conversation\n- Load full conversation history from the database for each request\n- Append the new user message to the conversation\n- Pass conversation history + new message to the AI agent\n- Store the assistant response in the database\n- Return conversation_id, response text, and tool usage metadata\n\nConstraints:\n- The server must not store in-memory chat state\n- Conversation continuity must survive server restarts\n- Enforce user ownership on all conversation data\")",
+      "Bash(find specs/002-chat-api-endpoint/ -name \"*.md\" -exec echo \"File: {}\" ; -exec head -n 5 {} ;)"
     ]
   }
 }

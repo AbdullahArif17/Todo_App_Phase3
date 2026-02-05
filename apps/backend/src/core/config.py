@@ -32,6 +32,24 @@ class Settings(BaseSettings):
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 
+    # AI Service configuration
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4-turbo-preview")
+    AI_TEMPERATURE: float = float(os.getenv("AI_TEMPERATURE", "0.7"))
+    AI_MAX_TOKENS: int = int(os.getenv("AI_MAX_TOKENS", "1000"))
+
+    # AI Agent configuration
+    AI_AGENT_NAME: str = os.getenv("AI_AGENT_NAME", "Todo Assistant")
+    AI_AGENT_MODEL: str = os.getenv("AI_AGENT_MODEL", "gpt-4-turbo")
+    AI_AGENT_TEMPERATURE: float = float(os.getenv("AI_AGENT_TEMPERATURE", "0.7"))
+    AI_AGENT_MAX_TOKENS: int = int(os.getenv("AI_AGENT_MAX_TOKENS", "1500"))
+    AI_AGENT_INSTRUCTIONS: str = os.getenv(
+        "AI_AGENT_INSTRUCTIONS",
+        "You are a helpful todo management assistant that helps users manage their tasks using natural language. "
+        "You can help create, update, delete, and list todos. You have access to tools for these operations. "
+        "Always respond in a friendly and helpful manner."
+    )
+
     model_config = {
         "env_file": ".env"
     }

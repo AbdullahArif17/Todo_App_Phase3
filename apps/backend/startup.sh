@@ -1,32 +1,42 @@
 #!/bin/bash
-# Production startup script for Todo AI Chatbot Backend
+# Production startup script for Todo AI Backend
 
 set -e  # Exit on any error
 
-echo "Starting Todo AI Chatbot Backend..."
+echo "Starting Todo AI Backend in production mode..."
 
-# Run database migrations if needed
-echo "Running database migrations..."
+# Set default environment variables if not provided
+export PORT=${PORT:-7860}
+export ENVIRONMENT=${ENVIRONMENT:-production}
+export DEBUG=${DEBUG:-false}
+export LOG_LEVEL=${LOG_LEVEL:-info}
+
+echo "Environment: $ENVIRONMENT"
+echo "Port: $PORT"
+echo "Debug: $DEBUG"
+
+# Run any necessary database migrations
+echo "Checking database migrations..."
 python -c "
+import sys
+import os
+sys.path.insert(0, os.path.join(os.getcwd(), 'src'))
 from sqlmodel import SQLModel
 from apps.backend.src.database import engine
 from apps.backend.src.models.conversation import Conversation
 from apps.backend.src.models.message import Message
 from apps.backend.src.models.user import User
-from apps.backend.src.models.todo_task import TodoTask
+from apps.backend.src.models.todo_task import TodoTask  # This may not exist yet, will be created as needed
 
 try:
-    SQLModel.metadata.create_all(engine)
+    # Create database tables if they don't exist
+    SQLModel.metadata.create_all(bind=engine)
     print('Database tables created/updated successfully')
 except Exception as e:
     print(f'Warning: Could not initialize database: {e}')
+    # Don't exit on database error as it might be a connection issue
 "
 
-# Start the application with uvicorn
-if [ "$ENVIRONMENT" = "development" ]; then
-    echo "Starting in development mode..."
-    exec uvicorn apps.backend.src.main:app --host 0.0.0.0 --port $PORT --reload
-else
-    echo "Starting in production mode..."
-    exec uvicorn apps.backend.src.main:app --host 0.0.0.0 --port $PORT --workers 2 --timeout-keep-alive 30
-fi
+# Start the application with gunicorn
+echo "Starting application server..."
+exec gunicorn --config gunicorn.conf.py production:application

@@ -50,10 +50,6 @@ const ChatPage = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Fix missing state variable
-  const [showSearchResults, setShowSearchResults] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -72,11 +68,6 @@ const ChatPage = () => {
     setIsLoading(true);
 
     try {
-      const chatRequest: ChatRequest = {
-        conversation_id: conversationId || undefined,
-        message: message
-      };
-
       const response = await chatService.sendMessage(user.id, message, conversationId || undefined);
 
       // Update conversation ID if this was the first message
@@ -120,7 +111,7 @@ const ChatPage = () => {
 
     try {
       // Call the search API endpoint
-      const results = await chatService.searchConversations(user.id, searchQuery);
+      const results = await chatService.searchConversations(user.id, searchQuery, 20, 0);
       setSearchResults(results.messages || []);
     } catch (error) {
       console.error('Error searching conversations:', error);

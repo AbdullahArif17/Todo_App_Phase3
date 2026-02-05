@@ -1023,7 +1023,7 @@ class ChatService:
         self.todo_agent.add_message_to_thread(thread.id, str(user_id), user_message_content)
 
         # Run the agent to process the message with context
-        agent_response = self.todo_agent.run_agent_with_context(thread.id, str(user_id), agent_context)
+        agent_response = self.todo_agent.run_agent_with_context(thread.id, str(user_id), additional_context=agent_context)
 
         # Process the agent's response
         processed_response = self.response_processor.process_response(agent_response)

@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from apps.backend.src.api.v1.chat import router as chat_router
 from apps.backend.src.api.v1.conversations import router as conversations_router
 from apps.backend.src.api.v1.auth import router as auth_router
-from apps.backend.src.core.config import settings
+from apps.backend.config import settings
 from apps.backend.src.database import engine
 from apps.backend.src.models.conversation import Conversation
 from apps.backend.src.models.message import Message

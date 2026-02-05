@@ -1,4 +1,4 @@
-# Data Model: Stateless Chat Architecture
+# Data Model: Todo AI Chatbot
 
 ## Entities
 
@@ -74,6 +74,21 @@ An authenticated entity that owns conversations and has permissions to access on
 **Relationships**:
 - One-to-many with Conversation (user has many conversations)
 
+### TodoTask
+A todo item in the system with title, description, and completion status.
+
+**Fields**:
+- `id`: UUID (primary key) - Unique identifier for the task
+- `user_id`: UUID (foreign key) - Reference to the user who owns this task
+- `title`: String - Title of the task
+- `description`: String (nullable) - Optional description of the task
+- `is_completed`: Boolean - Whether the task is completed
+- `created_at`: DateTime - When the task was created
+- `updated_at`: DateTime - When the task was last updated
+
+**Relationships**:
+- Many-to-one with User (task belongs to one user)
+
 ## Relationships
 
 ### Conversation ↔ Message
@@ -81,16 +96,29 @@ An authenticated entity that owns conversations and has permissions to access on
 - Foreign key: `conversation_id` in Message table references `id` in Conversation table
 - Cascade delete: When a conversation is deleted, all its messages are also deleted
 
-### User ↔ Conversation
+### Conversation ↔ User
 - One User has many Conversations (1:N relationship)
 - Foreign key: `user_id` in Conversation table references `id` in User table
 - When a user is deleted, their conversations are also deleted
+
+### Message ↔ User
+- Indirect relationship through Conversation (Message → Conversation → User)
+- Users can only access messages in their own conversations
+
+### TodoTask ↔ User
+- One User has many TodoTasks (1:N relationship)
+- Foreign key: `user_id` in TodoTask table references `id` in User table
+- When a user is deleted, their tasks are also deleted
 
 ## State Transitions
 
 ### Conversation States
 1. **Active** → **Archived**: When user archives the conversation (is_archived = true)
 2. **Archived** → **Active**: When user unarchives the conversation (is_archived = false)
+
+### TodoTask States
+1. **Pending** → **Completed**: When task completion status changes from false to true
+2. **Completed** → **Pending**: When task completion status changes from true to false
 
 ### Message States
 - Messages are immutable once created (no state transitions)

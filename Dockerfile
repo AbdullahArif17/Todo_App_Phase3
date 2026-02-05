@@ -43,4 +43,4 @@ RUN find . -type f -name "*.pyo" -delete 2>/dev/null || true
 USER appuser
 
 # Run the application
-CMD ["python", "startup.py"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]

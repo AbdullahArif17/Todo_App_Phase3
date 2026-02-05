@@ -1,6 +1,11 @@
 {
   "version": 2,
+  "name": "todo-ai-chat",
   "framework": "nextjs",
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "env": {
+    "NEXT_PUBLIC_BACKEND_URL": "https://your-backend-space.hf.space",
+    "NEXT_PUBLIC_OPENAI_DOMAIN_KEY": "your-chatkit-domain-key"
+  }
 }

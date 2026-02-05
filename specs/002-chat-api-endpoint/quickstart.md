@@ -32,7 +32,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 # Create environment file
-cp ../backend.env.example .env
+cp .env.example .env
 # Edit .env with your actual configuration values
 ```
 
@@ -45,7 +45,7 @@ cd apps/frontend
 npm install
 
 # Create environment file
-cp ../frontend.env.example .env.local
+cp .env.example .env.local
 # Edit .env.local with your actual configuration values
 ```
 

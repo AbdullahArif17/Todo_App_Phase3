@@ -1,4 +1,4 @@
-# Data Model: Todo AI Chatbot
+# Data Model: Stateless Chat Architecture
 
 ## Entities
 

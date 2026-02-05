@@ -1,70 +1,82 @@
-# Research: Stateless Chat Architecture with AI Agent Integration
+# Research: Todo Agent with OpenAI Agents SDK Implementation
 
-## Decision: OpenAI Agents SDK Integration with FastAPI
-**Rationale**: The OpenAI Agents SDK can be integrated with FastAPI endpoints by creating a global agent instance that is called from within the endpoint function. The agent operates statelessly by leveraging thread objects for each conversation, and all state is persisted to the database rather than kept in memory.
+## Decision: OpenAI Agents SDK Integration Pattern
+**Rationale**: The OpenAI Agents SDK provides a standardized way to create AI agents that can use tools. This aligns with our requirement to have the agent interact with todo operations exclusively through MCP tools, maintaining statelessness as required by the constitution. The agent will be initialized with system instructions that guide it to use MCP tools for all operations.
 
 **Alternatives considered**:
-- LangChain agents: Would require additional dependencies and different architecture
-- Custom AI integration: Would require more low-level implementation and wouldn't provide the same tool-calling capabilities
+- LangChain agents: Would require different architecture and dependencies
+- Custom function calling: Would be more complex to implement and maintain
 
 ## Decision: MCP Tool Registration with OpenAI Agents
-**Rationale**: MCP (Model Context Protocol) tools can be registered with OpenAI Agents by defining them as functions with proper JSON schemas. The OpenAI Assistants API allows for custom tools to be attached to an agent, which can then be called by the agent when needed. These tools connect to our existing todo service through the MCP server.
+**Rationale**: OpenAI Agents can register custom tools using function definitions with JSON schemas. The MCP tools will be defined as functions with proper input/output schemas that match our todo operations. This allows the agent to decide which tools to call based on user intent rather than hardcoded routing.
 
-**Alternatives considered**:
-- OpenAI Function Calling: Would be more tightly coupled to OpenAI
-- LangChain Tools: Would require different architecture patterns
+**Implementation approach**:
+- Define tools as functions with name, description, and parameters schema
+- Register tools with the agent during initialization
+- Implement tool execution handler that connects to the MCP server
 
-## Decision: Conversation Context Formatting for AI Agent
-**Rationale**: Conversation history should be formatted as a series of role/content pairs that follow the OpenAI message format. This allows the AI agent to understand the context of the conversation and respond appropriately. The context should include the most recent messages up to a reasonable token limit to maintain relevance while staying within model constraints.
+## Decision: Conversation Context Building for AI Agent
+**Rationale**: For stateless operation, each agent run must receive the full conversation context from the database. The context will be formatted as a series of role/content pairs following the OpenAI message format, allowing the agent to understand the conversation history and respond appropriately.
 
-**Alternatives considered**:
-- Plain text summary: Would lose important conversational context
-- Structured metadata only: Would not provide sufficient context for natural responses
+**Technical approach**:
+- Load conversation history from database before each agent run
+- Format messages as role/content pairs for the agent
+- Pass context as part of the agent's instructions or thread
 
-## Best Practices: Stateless AI Agent Architecture
-**Pattern**: Implement a stateless architecture where the agent receives full context for each request and all state is stored in the database. The agent itself should not maintain any memory between requests, but rather receive the necessary context through the conversation history provided in each request.
+## Architecture Pattern: Stateless Agent Design
+**Rationale**: The agent must not maintain any state between requests. All context comes from the database, and all results are stored back to the database. This ensures scalability and resilience to server restarts.
 
 **Key principles**:
-- No server-side session state between requests
-- All context loaded from database per request
-- Support horizontal scaling without shared memory
-- Efficient database queries with proper indexing
+- No server-side memory between requests
+- All conversation state stored in database
+- Agent receives full context for each request
+- Agent responses stored to database for future reference
 
-## Architecture Pattern: Tool-First AI Development
-**Rationale**: Following the tool-first approach ensures that all data operations are properly validated and secured through our existing service layer. The AI agent acts as an orchestration layer that determines which tools to call based on user intent, but all actual data operations happen through the same MCP tools used by other parts of the system.
+## Technology Choice: FastAPI + OpenAI Agents SDK
+**Rationale**: This combination provides:
+- FastAPI: High-performance async web framework with excellent OpenAPI support
+- OpenAI Agents SDK: Native tool-calling capabilities for our MCP integration
+- SQLModel: Type-safe SQL models with SQLAlchemy compatibility
+- Neon Serverless: Auto-scaling PostgreSQL database
 
 **Benefits**:
-- Consistent security and validation across all access patterns
-- Single source of truth for business logic
-- Audit trail for all operations
-- Proper user isolation and ownership validation
+- Clean separation between API, Agent, and Data layers
+- Proper async handling for AI service calls
+- Type safety throughout the stack
+- Auto-documentation of API endpoints
 
-## Technology Stack: FastAPI + OpenAI Agents + SQLModel
-**Rationale**: This combination provides:
-- FastAPI: High-performance web framework with excellent async support
-- OpenAI Agents SDK: Proper tool-calling capabilities for todo operations
-- SQLModel: Typed SQL models with SQLAlchemy compatibility
-- Neon Serverless PostgreSQL: Serverless database with good Python integration
+## Security Pattern: User Ownership Validation
+**Rationale**: All operations must verify that the authenticated user owns the resources they're accessing. This is enforced at multiple levels: authentication middleware, service layer, and database queries.
 
-**Alternatives considered**:
-- Flask + custom AI integration: Less performant and scalable
-- Django + custom AI integration: More complex than needed for API service
-- MongoDB + Pydantic: Would lose SQL benefits and existing schema
-
-## Error Handling Strategy: Graceful Failures
-**Rationale**: Implement comprehensive error handling for AI service unavailability, database connection issues, and invalid user inputs. The system should return appropriate error messages to users while maintaining security by not revealing internal system details.
-
-**Implementation approach**:
-- Circuit breaker pattern for AI service calls
-- Retry logic with exponential backoff
-- Fallback responses for critical failures
-- Detailed logging for debugging without exposing sensitive information
-
-## Security Considerations: User Isolation
-**Rationale**: Implement strict user ownership validation to ensure users can only access their own conversations. This should be enforced at multiple levels: authentication middleware, service layer validation, and database query filters.
-
-**Implementation approach**:
+**Implementation**:
 - JWT token validation in middleware
 - User ID verification in service methods
 - Database queries filtered by user ID
 - Conversation access validation before operations
+
+## Error Handling Strategy: Graceful Failures
+**Rationale**: The system must handle AI service unavailability, database connection issues, and invalid user inputs gracefully while maintaining security.
+
+**Approach**:
+- Circuit breaker pattern for AI service calls
+- Proper error messages without information disclosure
+- Fallback responses when AI service is unavailable
+- Comprehensive logging for debugging
+
+## Performance Optimization: Conversation History Management
+**Rationale**: Long conversations can exceed token limits and impact performance. We need to intelligently truncate conversation history while preserving important context.
+
+**Techniques**:
+- Keep first and last messages in long conversations
+- Implement token-aware truncation
+- Use conversation summaries for very long histories
+- Cache recent conversation contexts
+
+## MCP Integration Pattern: Tool-First Architecture
+**Rationale**: Following the MCP (Model Context Protocol) pattern ensures all data operations go through standardized tools, maintaining clean separation between AI reasoning and data operations.
+
+**Implementation**:
+- All todo operations exposed as MCP tools
+- Agent calls tools rather than accessing database directly
+- Tools enforce authentication and authorization
+- Tool responses returned to agent for natural language processing

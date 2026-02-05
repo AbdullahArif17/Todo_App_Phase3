@@ -11,7 +11,7 @@ const ChatPage = () => {
   const [messages, setMessages] = useState<{id: string, role: string, content: string, timestamp: Date}[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Message[]>([]);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
 
@@ -50,6 +50,10 @@ const ChatPage = () => {
     scrollToBottom();
   }, [messages]);
 
+  // Fix missing state variable
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -73,7 +77,7 @@ const ChatPage = () => {
         message: message
       };
 
-      const response = await chatService.sendMessage(user.id, chatRequest);
+      const response = await chatService.sendMessage(user.id, message, conversationId || undefined);
 
       // Update conversation ID if this was the first message
       if (!conversationId) {
@@ -115,16 +119,9 @@ const ChatPage = () => {
     setShowSearchResults(true);
 
     try {
-      // This would call the search API endpoint
-      // For now, we'll simulate the search functionality
-      console.log(`Searching for: ${searchQuery}`);
-
-      // In a real implementation, we would call the search API
-      // const results = await chatService.searchConversations(user.id, searchQuery);
-      // setSearchResults(results);
-
-      // For demo purposes, we'll just show a message
-      setSearchResults([]);
+      // Call the search API endpoint
+      const results = await chatService.searchConversations(user.id, searchQuery);
+      setSearchResults(results.messages || []);
     } catch (error) {
       console.error('Error searching conversations:', error);
       setSearchResults([]);

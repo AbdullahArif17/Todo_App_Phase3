@@ -28,6 +28,16 @@ export interface Message {
   updated_at: string;
 }
 
+export interface SearchResultsResponse {
+  query: string;
+  conversations: Conversation[];
+  messages: Message[];
+  total_conversation_results: number;
+  total_message_results: number;
+  limit: number;
+  offset: number;
+}
+
 class ChatService {
   async sendMessage(userId: string, message: string, conversationId?: string): Promise<ChatResponse> {
     try {
@@ -99,16 +109,6 @@ class ChatService {
       const errorMessage = this.getErrorMessage(error);
       throw new Error(errorMessage || 'Failed to fetch conversations');
     }
-  }
-
-export interface SearchResultsResponse {
-    query: string;
-    conversations: Conversation[];
-    messages: Message[];
-    total_conversation_results: number;
-    total_message_results: number;
-    limit: number;
-    offset: number;
   }
 
   async searchConversations(userId: string, query: string, limit: number = 20, offset: number = 0): Promise<SearchResultsResponse> {

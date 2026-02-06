@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
-import chatService, { SearchResultsResponse } from '@/services/chat-service';
+import chatService from '@/services/chat-service';
 
 const ChatPage = () => {
   const [message, setMessage] = useState('');

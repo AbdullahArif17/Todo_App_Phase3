@@ -1,3 +1,15 @@
+---
+title: Todo AI Backend
+emoji: 🤖
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+sdk_version: "3.8"
+python_version: "3.11"
+app_file: app.py
+pinned: false
+---
+
 # Todo AI Backend - Production Ready
 
 This is the backend API for an AI-powered Todo chatbot that enables natural language interaction with todo management using MCP tools and OpenAI Agents SDK.
@@ -33,7 +45,7 @@ This is the backend API for an AI-powered Todo chatbot that enables natural lang
 
 ## Environment Variables
 
-Set these environment variables:
+Set these environment variables in your Space settings:
 
 ```
 DATABASE_URL=postgresql://username:password@your-db-url.com:5432/dbname

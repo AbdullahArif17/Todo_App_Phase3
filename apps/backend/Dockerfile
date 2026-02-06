@@ -29,6 +29,7 @@ RUN find /app -type f -name "*.pyo" -delete 2>/dev/null || true
 # Copy project files
 COPY src/ ./src/
 COPY main.py ./main.py
+COPY app.py ./app.py
 COPY production.py ./production.py
 COPY config.py ./config.py
 COPY gunicorn.conf.py ./gunicorn.conf.py
@@ -51,4 +52,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:7860/health || exit 1
 
 # Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["python", "app.py"]

@@ -1,3 +1,15 @@
+---
+title: Todo AI Backend
+emoji: 🤖
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+sdk_version: "3.8"
+python_version: "3.11"
+app_file: app.py
+pinned: false
+---
+
 # Todo AI Backend
 
 This is the backend service for the Todo AI Chatbot that provides a stateless chat API endpoint with AI agent integration for todo management.

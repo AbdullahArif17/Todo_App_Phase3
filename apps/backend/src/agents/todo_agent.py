@@ -407,6 +407,6 @@ class TodoAgent:
 
         return final_response.choices[0].message.content
 
-        else:
-            # No function calls were made, return the original response
-            return response_message.content
+    else:
+        # No function calls were made, return the original response
+        return response_message.content

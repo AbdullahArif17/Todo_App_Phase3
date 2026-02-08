@@ -7,11 +7,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from sqlmodel import SQLModel
-from apps.backend.src.database import engine
-from apps.backend.src.api.v1.chat import router as chat_router
-from apps.backend.src.api.v1.conversations import router as conversations_router
-from apps.backend.src.api.v1.auth import router as auth_router
-from apps.backend.src.core.config import settings
+from src.database import engine
+from src.api.v1.chat import router as chat_router
+from src.api.v1.conversations import router as conversations_router
+from src.api.v1.auth import router as auth_router
+from src.core.config import settings
 import logging
 
 # Set up logging
@@ -112,4 +112,4 @@ def api_health_check():
 
 # For Hugging Face Spaces compatibility
 # The variable 'app' is what Hugging Face Spaces will look for
-app_instance = app
+# The app variable is already created at the top of this file

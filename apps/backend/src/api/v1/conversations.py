@@ -3,11 +3,11 @@ from sqlmodel import Session
 from typing import List, Dict, Any
 import uuid
 
-from apps.backend.src.database import get_session
-from apps.backend.src.api.deps import get_current_active_user
-from apps.backend.src.models.user import User
-from apps.backend.src.services.chat_service import ChatService
-from apps.backend.src.services.analytics_service import AnalyticsService
+from ...database import get_session
+from ..deps import get_current_active_user
+from ...models.user import User
+from ...services.chat_service import ChatService
+from ...services.analytics_service import AnalyticsService
 
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])

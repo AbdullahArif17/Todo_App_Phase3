@@ -1,226 +1,314 @@
 """
 Todo Agent Implementation
-Uses OpenAI Agents SDK to create an AI agent that manages todos via MCP tools
+Uses LLM provider (Groq or OpenAI) to create an AI agent that manages todos via MCP tools
 """
-from openai import OpenAI
+from groq import AsyncGroq
 from typing import Dict, Any, List, Optional
 import uuid
 from sqlmodel import Session
 
-from apps.backend.src.agents.config import agent_config, tool_config
-from apps.backend.src.mcp_server.main import mcp_todo_server
+from ..core.config import settings
+from ..mcp_server.main import mcp_todo_server
 
 
 class TodoAgent:
     """
-    Todo Agent that uses OpenAI Agents SDK to manage todos via MCP tools.
+    Todo Agent that uses LLM provider to manage todos via MCP tools.
     The agent is configured with system instructions and MCP tools for all operations.
+    Supports both Groq and OpenAI providers based on configuration.
     """
 
     def __init__(self):
-        # Initialize OpenAI client
-        self.client = OpenAI()
+        # Initialize appropriate LLM client based on provider
+        if settings.AI_PROVIDER.lower() == "groq":
+            self.client = AsyncGroq(api_key=settings.GROQ_API_KEY)
+            self.model = settings.GROQ_MODEL
+        else:  # Default to OpenAI
+            from openai import AsyncOpenAI
+            self.client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+            self.model = settings.OPENAI_MODEL
 
-        # Create the agent with instructions and tools
-        self.agent = self.client.beta.agents.create(
-            name=agent_config.name,
-            instructions=agent_config.instructions,
-            tools=self._get_tools(),
-            model=agent_config.model
-        )
+        self.temperature = settings.AI_TEMPERATURE
+        self.max_tokens = settings.AI_MAX_TOKENS
 
-    def _get_tools(self) -> List[Dict[str, Any]]:
+    async def process_message_with_context(self, user_input: str, conversation_history: List[Dict[str, str]], session: Session = None) -> str:
         """
-        Get the list of available tools for the agent.
-        These correspond to the MCP tools for todo operations.
+        Process user input with conversation history and return AI-generated response.
+
+        Args:
+            user_input: The user's message
+            conversation_history: List of previous messages in the conversation
+            session: Database session for tool operations
+
+        Returns:
+            AI-generated response
         """
-        return [
-            {"type": "function", "function": tool_config.add_task},
-            {"type": "function", "function": tool_config.list_tasks},
-            {"type": "function", "function": tool_config.update_task},
-            {"type": "function", "function": tool_config.complete_task},
-            {"type": "function", "function": tool_config.delete_task},
+        # Prepare the messages for the AI model
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are a helpful todo management assistant that helps users manage their tasks using natural language. "
+                    "You can help create, update, delete, and list todos. You have access to tools for these operations. "
+                    "Always respond in a friendly and helpful manner. "
+                    "When the user wants to perform a todo operation, use the appropriate tool."
+                )
+            }
         ]
 
-    def get_agent_id(self) -> str:
-        """
-        Get the ID of the created agent.
-        """
-        return self.agent.id
+        # Add conversation history to maintain context
+        for msg in conversation_history:
+            messages.append({
+                "role": msg.get("role", "user"),
+                "content": msg.get("content", "")
+            })
 
-    def create_thread(self):
-        """
-        Create a new thread for a conversation.
-        """
-        return self.client.beta.threads.create()
+        # Add the current user input
+        messages.append({
+            "role": "user",
+            "content": user_input
+        })
 
-    def add_message_to_thread(self, thread_id: str, user_id: str, message: str):
-        """
-        Add a user message to the thread.
-        """
-        return self.client.beta.threads.messages.create(
-            thread_id=thread_id,
-            role="user",
-            content=message
-        )
-
-    def run_agent(self, thread_id: str, user_id: str):
-        """
-        Run the agent on the thread to process the user's message.
-        This will execute any required tools and return the agent's response.
-        """
-        run = self.client.beta.threads.runs.create(
-            thread_id=thread_id,
-            agent_id=self.agent.id,
-            # Pass additional instructions if needed
-            additional_instructions=f"The user_id for this request is {user_id}. "
-                                  f"Always ensure operations are performed for this user only."
-        )
-
-        # Wait for the run to complete
-        return self._wait_for_run_completion(thread_id, run.id)
-
-    def run_agent_with_context(self, thread_id: str, user_id: str, additional_context: str = ""):
-        """
-        Run the agent on the thread with additional context.
-        """
-        run = self.client.beta.threads.runs.create(
-            thread_id=thread_id,
-            agent_id=self.agent.id,
-            # Pass additional instructions with context
-            additional_instructions=f"The user_id for this request is {user_id}. "
-                                  f"Always ensure operations are performed for this user only. "
-                                  f"{additional_context}"
-        )
-
-        # Wait for the run to complete
-        return self._wait_for_run_completion(thread_id, run.id)
-
-    def _wait_for_run_completion(self, thread_id: str, run_id: str):
-        """
-        Wait for a run to complete, handling any required actions (tool calls).
-        """
-        import time
-
-        while True:
-            run = self.client.beta.threads.runs.retrieve(
-                thread_id=thread_id,
-                run_id=run_id
-            )
-
-            if run.status == "completed":
-                break
-            elif run.status == "requires_action":
-                # Handle tool calls by connecting to the MCP server
-                tool_outputs = self._handle_tool_calls(run.required_action.submit_tool_outputs.tool_calls)
-
-                # Submit the tool outputs
-                self.client.beta.threads.runs.submit_tool_outputs(
-                    thread_id=thread_id,
-                    run_id=run_id,
-                    tool_outputs=tool_outputs
-                )
-            elif run.status in ["failed", "cancelled", "expired"]:
-                raise Exception(f"Run failed with status: {run.status}")
-
-            time.sleep(0.5)  # Poll every 0.5 seconds
-
-        # Retrieve the messages from the thread
-        messages = self.client.beta.threads.messages.list(
-            thread_id=thread_id,
-            order="asc"  # Oldest first
-        )
-
-        # Get the latest assistant message
-        assistant_messages = [msg for msg in messages.data if msg.role == "assistant"]
-        if assistant_messages:
-            latest_message = assistant_messages[-1]
-            # Extract text content
-            text_contents = [content.text.value for content in latest_message.content if content.type == "text"]
-            return {
-                "response_text": "\n".join(text_contents) if text_contents else "",
-                "thread_id": thread_id
-            }
-
-        return {
-            "response_text": "No response from assistant.",
-            "thread_id": thread_id
-        }
-
-    def _handle_tool_calls(self, tool_calls):
-        """
-        Handle the tool calls required by the agent.
-        Connect to the MCP server to execute tools.
-        """
-        import json
-
-        tool_outputs = []
-
-        for tool_call in tool_calls:
-            function_name = tool_call.function.name
-            try:
-                # Safely parse the arguments
-                function_args = json.loads(tool_call.function.arguments)
-            except json.JSONDecodeError:
-                # If JSON parsing fails, return an error
-                tool_outputs.append({
-                    "tool_call_id": tool_call.id,
-                    "output": json.dumps({
-                        "success": False,
-                        "error": f"Invalid JSON arguments for tool {function_name}"
-                    })
-                })
-                continue
-
-            # Execute the tool function using the MCP server
-            try:
-                # Get the server instance
-                server = mcp_todo_server.get_server()
-
-                # Get the tool from the server
-                if function_name not in server._tools:
-                    result = {
-                        "success": False,
-                        "error": f"Tool '{function_name}' not found"
-                    }
-                else:
-                    # Execute the tool
-                    tool = server._tools[function_name]
-
-                    # For now, we'll simulate the tool execution
-                    # In a real implementation, this would call the actual MCP tool
-                    if function_name == "add_task":
-                        # Validate user_id format
-                        try:
-                            user_uuid = uuid.UUID(function_args["user_id"])
-                        except ValueError:
-                            result = {
-                                "success": False,
-                                "error": "Invalid user_id format"
+        try:
+            # Call the appropriate API based on provider
+            if settings.AI_PROVIDER.lower() == "groq":
+                # Use Groq API
+                response = await self.client.chat.completions.create(
+                    messages=messages,
+                    model=self.model,
+                    temperature=self.temperature,
+                    max_tokens=self.max_tokens,
+                    tools=[
+                        {
+                            "type": "function",
+                            "function": {
+                                "name": "add_task",
+                                "description": "Add a new task for a user. Requires user_id and title.",
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": {
+                                        "user_id": {"type": "string", "description": "The ID of the user creating the task"},
+                                        "title": {"type": "string", "description": "The title of the task to create"},
+                                        "description": {"type": "string", "description": "Optional description of the task"}
+                                    },
+                                    "required": ["user_id", "title"]
+                                }
                             }
-                        else:
+                        },
+                        {
+                            "type": "function",
+                            "function": {
+                                "name": "list_tasks",
+                                "description": "List tasks for a user. Requires user_id.",
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": {
+                                        "user_id": {"type": "string", "description": "The ID of the user whose tasks to list"},
+                                        "limit": {"type": "integer", "description": "Maximum number of tasks to return (default: 10)"},
+                                        "offset": {"type": "integer", "description": "Number of tasks to skip (default: 0)"}
+                                    },
+                                    "required": ["user_id"]
+                                }
+                            }
+                        },
+                        {
+                            "type": "function",
+                            "function": {
+                                "name": "update_task",
+                                "description": "Update an existing task for a user. Requires user_id and task_id.",
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": {
+                                        "user_id": {"type": "string", "description": "The ID of the user"},
+                                        "task_id": {"type": "string", "description": "The ID of the task to update"},
+                                        "title": {"type": "string", "description": "New title for the task (optional)"},
+                                        "description": {"type": "string", "description": "New description for the task (optional)"},
+                                        "is_completed": {"type": "boolean", "description": "New completion status for the task (optional)"}
+                                    },
+                                    "required": ["user_id", "task_id"]
+                                }
+                            }
+                        },
+                        {
+                            "type": "function",
+                            "function": {
+                                "name": "complete_task",
+                                "description": "Mark a task as complete or incomplete for a user. Requires user_id and task_id.",
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": {
+                                        "user_id": {"type": "string", "description": "The ID of the user"},
+                                        "task_id": {"type": "string", "description": "The ID of the task to update"},
+                                        "is_completed": {"type": "boolean", "description": "Whether the task is completed (default: true)"}
+                                    },
+                                    "required": ["user_id", "task_id"]
+                                }
+                            }
+                        },
+                        {
+                            "type": "function",
+                            "function": {
+                                "name": "delete_task",
+                                "description": "Delete a task for a user. Requires user_id and task_id.",
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": {
+                                        "user_id": {"type": "string", "description": "The ID of the user"},
+                                        "task_id": {"type": "string", "description": "The ID of the task to delete"}
+                                    },
+                                    "required": ["user_id", "task_id"]
+                                }
+                            }
+                        }
+                    ],
+                    tool_choice="auto"
+                )
+            else:
+                # Use OpenAI API
+                from openai import AsyncOpenAI
+                openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+
+                response = await openai_client.chat.completions.create(
+                    messages=messages,
+                    model=self.model,
+                    temperature=self.temperature,
+                    max_tokens=self.max_tokens,
+                    tools=[
+                        {
+                            "type": "function",
+                            "function": {
+                                "name": "add_task",
+                                "description": "Add a new task for a user. Requires user_id and title.",
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": {
+                                        "user_id": {"type": "string", "description": "The ID of the user creating the task"},
+                                        "title": {"type": "string", "description": "The title of the task to create"},
+                                        "description": {"type": "string", "description": "Optional description of the task"}
+                                    },
+                                    "required": ["user_id", "title"]
+                                }
+                            }
+                        },
+                        {
+                            "type": "function",
+                            "function": {
+                                "name": "list_tasks",
+                                "description": "List tasks for a user. Requires user_id.",
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": {
+                                        "user_id": {"type": "string", "description": "The ID of the user whose tasks to list"},
+                                        "limit": {"type": "integer", "description": "Maximum number of tasks to return (default: 10)"},
+                                        "offset": {"type": "integer", "description": "Number of tasks to skip (default: 0)"}
+                                    },
+                                    "required": ["user_id"]
+                                }
+                            }
+                        },
+                        {
+                            "type": "function",
+                            "function": {
+                                "name": "update_task",
+                                "description": "Update an existing task for a user. Requires user_id and task_id.",
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": {
+                                        "user_id": {"type": "string", "description": "The ID of the user"},
+                                        "task_id": {"type": "string", "description": "The ID of the task to update"},
+                                        "title": {"type": "string", "description": "New title for the task (optional)"},
+                                        "description": {"type": "string", "description": "New description for the task (optional)"},
+                                        "is_completed": {"type": "boolean", "description": "New completion status for the task (optional)"}
+                                    },
+                                    "required": ["user_id", "task_id"]
+                                }
+                            }
+                        },
+                        {
+                            "type": "function",
+                            "function": {
+                                "name": "complete_task",
+                                "description": "Mark a task as complete or incomplete for a user. Requires user_id and task_id.",
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": {
+                                        "user_id": {"type": "string", "description": "The ID of the user"},
+                                        "task_id": {"type": "string", "description": "The ID of the task to update"},
+                                        "is_completed": {"type": "boolean", "description": "Whether the task is completed (default: true)"}
+                                    },
+                                    "required": ["user_id", "task_id"]
+                                }
+                            }
+                        },
+                        {
+                            "type": "function",
+                            "function": {
+                                "name": "delete_task",
+                                "description": "Delete a task for a user. Requires user_id and task_id.",
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": {
+                                        "user_id": {"type": "string", "description": "The ID of the user"},
+                                        "task_id": {"type": "string", "description": "The ID of the task to delete"}
+                                    },
+                                    "required": ["user_id", "task_id"]
+                                }
+                            }
+                        }
+                    ],
+                    tool_choice="auto"
+                )
+
+        except Exception as e:
+            # Handle AI service unavailability
+            if "api_key" in str(e).lower() or "authentication" in str(e).lower():
+                return "I'm sorry, but I'm currently unable to process your request due to authentication issues. Please contact the administrator."
+            elif "rate limit" in str(e).lower() or "quota" in str(e).lower():
+                return "I'm sorry, but I've reached my usage limit and cannot process your request right now. Please try again later."
+            elif "connection" in str(e).lower() or "timeout" in str(e).lower():
+                return "I'm sorry, but I'm experiencing connectivity issues and cannot process your request right now. Please try again later."
+            else:
+                return f"I'm sorry, I encountered an error processing your request: {str(e)}"
+
+        # Process the response
+        response_message = response.choices[0].message
+
+        # Check if the model wanted to call a function
+        tool_calls = response_message.tool_calls
+
+        if tool_calls:
+            # Send the info for each function call and function response to the model
+            messages.append(response_message)  # extend conversation with assistant's reply
+
+            for tool_call in tool_calls:
+                function_name = tool_call.function.name
+                function_args = tool_call.function.arguments
+
+                # Execute the function
+                try:
+                    import json
+                    args_dict = json.loads(function_args)
+
+                    # Execute the tool through the MCP server
+                    from ..mcp_server.main import mcp_todo_server
+                    server = mcp_todo_server.get_server()
+
+                    if function_name in server._tools:
+                        # For now, we'll simulate the tool execution
+                        # In a real implementation, this would connect to the MCP server
+                        if function_name == "add_task":
                             # In a real implementation, this would call the actual tool
                             result = {
                                 "success": True,
-                                "message": f"Task '{function_args.get('title', 'Untitled')}' added successfully",
+                                "message": f"Task '{args_dict.get('title', 'Untitled')}' added successfully",
                                 "task": {
                                     "id": str(uuid.uuid4()),  # Simulated task ID
-                                    "title": function_args.get("title"),
-                                    "description": function_args.get("description", ""),
+                                    "title": args_dict.get("title"),
+                                    "description": args_dict.get("description", ""),
                                     "is_completed": False
                                 }
                             }
-
-                    elif function_name == "list_tasks":
-                        # Validate user_id format
-                        try:
-                            user_uuid = uuid.UUID(function_args["user_id"])
-                        except ValueError:
-                            result = {
-                                "success": False,
-                                "error": "Invalid user_id format"
-                            }
-                        else:
+                        elif function_name == "list_tasks":
                             # In a real implementation, this would call the actual tool
                             result = {
                                 "success": True,
@@ -240,91 +328,85 @@ class TodoAgent:
                                     }
                                 ]
                             }
-
-                    elif function_name == "update_task":
-                        # Validate user_id and task_id formats
-                        try:
-                            user_uuid = uuid.UUID(function_args["user_id"])
-                            task_uuid = uuid.UUID(function_args["task_id"])
-                        except ValueError:
-                            result = {
-                                "success": False,
-                                "error": "Invalid user_id or task_id format"
-                            }
-                        else:
+                        elif function_name == "update_task":
                             # In a real implementation, this would call the actual tool
                             result = {
                                 "success": True,
-                                "message": "Task updated successfully",
+                                "message": f"Task updated successfully",
                                 "task": {
-                                    "id": str(task_uuid),
-                                    "title": function_args.get("title", "Updated Task"),
-                                    "description": function_args.get("description", ""),
-                                    "is_completed": function_args.get("is_completed", False)
+                                    "id": args_dict.get('task_id'),
+                                    "title": args_dict.get('title', 'Updated Task'),
+                                    "description": args_dict.get('description', ''),
+                                    "is_completed": args_dict.get('is_completed', False)
                                 }
                             }
-
-                    elif function_name == "complete_task":
-                        # Validate user_id and task_id formats
-                        try:
-                            user_uuid = uuid.UUID(function_args["user_id"])
-                            task_uuid = uuid.UUID(function_args["task_id"])
-                        except ValueError:
-                            result = {
-                                "success": False,
-                                "error": "Invalid user_id or task_id format"
-                            }
-                        else:
-                            status = "completed" if function_args.get("is_completed", True) else "marked as incomplete"
+                        elif function_name == "complete_task":
                             # In a real implementation, this would call the actual tool
+                            status = "completed" if args_dict.get('is_completed', True) else "marked as incomplete"
                             result = {
                                 "success": True,
-                                "message": f"Task has been {status}",
+                                "message": f"Task has been {status} successfully",
                                 "task": {
-                                    "id": str(task_uuid),
+                                    "id": args_dict.get('task_id'),
                                     "title": "Sample Task",
                                     "description": "Sample description",
-                                    "is_completed": function_args.get("is_completed", True)
+                                    "is_completed": args_dict.get('is_completed', True)
                                 }
                             }
-
-                    elif function_name == "delete_task":
-                        # Validate user_id and task_id formats
-                        try:
-                            user_uuid = uuid.UUID(function_args["user_id"])
-                            task_uuid = uuid.UUID(function_args["task_id"])
-                        except ValueError:
-                            result = {
-                                "success": False,
-                                "error": "Invalid user_id or task_id format"
-                            }
-                        else:
+                        elif function_name == "delete_task":
                             # In a real implementation, this would call the actual tool
                             result = {
                                 "success": True,
                                 "message": "Task deleted successfully"
                             }
-
+                        else:
+                            # Unknown tool
+                            result = {
+                                "success": False,
+                                "message": f"Unknown tool: {function_name}"
+                            }
                     else:
-                        # Unknown tool
                         result = {
                             "success": False,
-                            "error": f"Unknown tool: {function_name}"
+                            "message": f"Tool '{function_name}' not found"
                         }
 
-            except Exception as e:
-                result = {
-                    "success": False,
-                    "error": f"Error executing {function_name}: {str(e)}"
-                }
+                except Exception as e:
+                    result = {
+                        "success": False,
+                        "message": f"Error executing function {function_name}: {str(e)}"
+                    }
 
-            tool_outputs.append({
-                "tool_call_id": tool_call.id,
-                "output": json.dumps(result)
-            })
+                # Add function response to the messages
+                messages.append({
+                    "tool_call_id": tool_call.id,
+                    "role": "tool",
+                    "name": function_name,
+                    "content": str(result)  # Result of the function call
+                })
 
-        return tool_outputs
+        # Get the final response from the model after function calls
+        if settings.AI_PROVIDER.lower() == "groq":
+            final_response = await self.client.chat.completions.create(
+                messages=messages,
+                model=self.model,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+            )
+        else:
+            # Use OpenAI for final response
+            from openai import AsyncOpenAI
+            openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
 
+            final_response = await openai_client.chat.completions.create(
+                messages=messages,
+                model=self.model,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+            )
 
-# Global agent instance
-todo_agent = TodoAgent()
+        return final_response.choices[0].message.content
+
+        else:
+            # No function calls were made, return the original response
+            return response_message.content

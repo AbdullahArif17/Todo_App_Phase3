@@ -2,16 +2,16 @@ from sqlmodel import Session, select
 from typing import Optional, List
 from datetime import datetime
 import uuid
-from apps.backend.src.models.conversation import Conversation, ConversationRead
-from apps.backend.src.models.message import Message, MessageRead
-from apps.backend.src.schemas.chat import ChatRequest
+from ..models.conversation import Conversation, ConversationRead
+from ..models.message import Message, MessageRead
+from ..schemas.chat import ChatRequest
 
 
 class ChatService:
     def __init__(self):
-        from apps.backend.src.agents.todo_agent import todo_agent
-        from apps.backend.src.agents.response_processor import response_processor
-        from apps.backend.src.agents.ai_utils import build_agent_context
+        from ..agents.todo_agent import todo_agent
+        from ..agents.response_processor import response_processor
+        from ..agents.ai_utils import build_agent_context
         self.todo_agent = todo_agent
         self.response_processor = response_processor
         self.build_agent_context = build_agent_context

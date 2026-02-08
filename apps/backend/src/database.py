@@ -1,15 +1,15 @@
 from sqlmodel import create_engine, Session
-from src.core.config import settings
+from ..core.config import settings
 from sqlalchemy.pool import QueuePool
 import logging
 
 # Import models to ensure they are registered with SQLModel
-from apps.backend.src.models.user import User
-from apps.backend.src.models.todo_task import TodoTask
-from apps.backend.src.models.conversation import Conversation
-from apps.backend.src.models.message import Message
-from apps.backend.src.models.tag import Tag
-from apps.backend.src.models.template import Template
+from .models.user import User
+from .models.todo_task import TodoTask
+from .models.conversation import Conversation
+from .models.message import Message
+from .models.tag import Tag
+from .models.template import Template
 
 # Configure logging
 logger = logging.getLogger(__name__)

@@ -6,15 +6,15 @@ import uuid
 import re
 from fastapi.responses import StreamingResponse
 
-from apps.backend.src.database import get_session
-from apps.backend.src.api.deps import get_current_active_user
-from apps.backend.src.models.user import User
-from apps.backend.src.schemas.chat import ChatRequest, ChatResponse
-from apps.backend.src.services.chat_service import ChatService
-from apps.backend.src.agents.todo_agent import todo_agent
-from apps.backend.src.utils.ai_utils import format_conversation_for_ai
-from apps.backend.src.utils.logging import log_chat_access_attempt, log_security_event, setup_chat_logging
-from apps.backend.src.utils.rate_limit import ai_rate_limiter
+from ...database import get_session
+from ..deps import get_current_active_user
+from ...models.user import User
+from ...schemas.chat import ChatRequest, ChatResponse
+from ...services.chat_service import ChatService
+from ...agents.todo_agent import todo_agent
+from ...utils.ai_utils import format_conversation_for_ai
+from ...utils.logging import log_chat_access_attempt, log_security_event, setup_chat_logging
+from ...utils.rate_limit import ai_rate_limiter
 import logging
 
 router = APIRouter(prefix="/chat", tags=["chat"])

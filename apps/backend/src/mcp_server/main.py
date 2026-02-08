@@ -10,8 +10,8 @@ import asyncio
 import uuid
 from sqlmodel import Session
 
-from apps.backend.src.services.todo_service import TodoService
-from apps.backend.src.database import engine
+from ..services.todo_service import TodoService
+from ..database import engine
 import uuid
 
 

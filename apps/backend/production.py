@@ -5,7 +5,7 @@ Uses gunicorn for production deployment
 import os
 import sys
 import logging
-from apps.backend.src.main import app
+from main import app
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

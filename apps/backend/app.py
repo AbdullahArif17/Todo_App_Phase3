@@ -1,5 +1,5 @@
 import os
-from apps.backend.src.main import app
+from main import app
 import uvicorn
 
 # Application entry point for various deployment platforms

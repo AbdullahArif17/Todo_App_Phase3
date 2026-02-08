@@ -20,13 +20,19 @@ echo "Checking database migrations..."
 python -c "
 import sys
 import os
+# Add both the current directory and src directory to the Python path
+sys.path.insert(0, os.path.join(os.getcwd(), '.'))
 sys.path.insert(0, os.path.join(os.getcwd(), 'src'))
 from sqlmodel import SQLModel
-from apps.backend.src.database import engine
-from apps.backend.src.models.conversation import Conversation
-from apps.backend.src.models.message import Message
-from apps.backend.src.models.user import User
-from apps.backend.src.models.todo_task import TodoTask  # This may not exist yet, will be created as needed
+from database import engine
+from models.conversation import Conversation
+from models.message import Message
+from models.user import User
+try:
+    from models.todo_task import TodoTask  # This may not exist yet, will be created as needed
+except ImportError:
+    # If TodoTask model doesn't exist yet, it's fine - just continue
+    pass
 
 try:
     # Create database tables if they don't exist
@@ -39,4 +45,4 @@ except Exception as e:
 
 # Start the application with gunicorn
 echo "Starting application server..."
-exec gunicorn --config gunicorn.conf.py production:application
+exec gunicorn --config gunicorn.conf.py production:app

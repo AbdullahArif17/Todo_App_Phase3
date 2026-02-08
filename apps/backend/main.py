@@ -5,14 +5,9 @@ Compatible with Hugging Face Spaces deployment
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from sqlmodel import SQLModel
 from apps.backend.src.database import engine
-from apps.backend.src.models.conversation import Conversation
-from apps.backend.src.models.message import Message
-from apps.backend.src.models.user import User
-from apps.backend.src.models.todo_task import TodoTask
 from apps.backend.src.api.v1.chat import router as chat_router
 from apps.backend.src.api.v1.conversations import router as conversations_router
 from apps.backend.src.api.v1.auth import router as auth_router
@@ -59,12 +54,12 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_origins=settings.ALLOWED_ORIGINS.split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    # Add additional origins from environment if needed
-    allow_origin_regex=settings.CORS_ORIGIN_REGEX if hasattr(settings, 'CORS_ORIGIN_REGEX') else None,
+    # Expose headers to frontend
+    expose_headers=["Access-Control-Allow-Origin"]
 )
 
 
@@ -113,10 +108,6 @@ def api_health_check():
         "environment": settings.ENVIRONMENT,
         "timestamp": __import__('datetime').datetime.utcnow().isoformat()
     }
-
-
-# Mount static files if needed
-# app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 # For Hugging Face Spaces compatibility

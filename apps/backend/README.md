@@ -1,18 +1,6 @@
----
-title: Todo AI Backend
-emoji: 🤖
-colorFrom: blue
-colorTo: indigo
-sdk: docker
-sdk_version: "3.8"
-python_version: "3.11"
-app_file: app.py
-pinned: false
----
+# Todo AI Backend
 
-# Todo AI Backend - Production Ready
-
-This is the backend API for an AI-powered Todo chatbot that enables natural language interaction with todo management using MCP tools and OpenAI Agents SDK.
+This is the backend service for the Todo AI Chatbot that provides a stateless chat API endpoint with AI agent integration for todo management.
 
 ## Features
 
@@ -25,6 +13,15 @@ This is the backend API for an AI-powered Todo chatbot that enables natural lang
 - User-specific data isolation for conversations and tasks
 - PostgreSQL database support
 - Production-optimized Docker configuration
+
+## Architecture
+
+The system implements a stateless chat architecture using:
+- **FastAPI**: High-performance web framework
+- **OpenAI Agents SDK**: AI agent for natural language processing
+- **MCP Server**: Model Context Protocol server exposing todo operations as tools
+- **SQLModel**: Typed SQL models with SQLAlchemy compatibility
+- **Neon Serverless PostgreSQL**: Cloud-native database with auto-scaling
 
 ## API Endpoints
 
@@ -45,19 +42,63 @@ This is the backend API for an AI-powered Todo chatbot that enables natural lang
 
 ## Environment Variables
 
-Set these environment variables in your Space settings:
+Set these environment variables:
 
-```
-DATABASE_URL=postgresql://username:password@your-db-url.com:5432/dbname
+```env
+# Database Configuration
+DATABASE_URL=postgresql://username:password@ep-xxx.us-east-1.aws.neon.tech/dbname
+
+# OpenAI Configuration
 OPENAI_API_KEY=your-openai-api-key-here
 OPENAI_MODEL=gpt-4-turbo
+
+# Security Configuration
 SECRET_KEY=your-super-long-secret-key-change-in-production
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Environment
 ENVIRONMENT=production
-DEBUG=False
+DEBUG=false
+LOG_LEVEL=INFO
+
+# CORS Settings
 ALLOWED_ORIGINS=https://your-frontend-domain.vercel.app,https://your-frontend-domain.com,http://localhost:3000
+
+# Rate Limiting
 AI_RATE_LIMIT_PER_MINUTE=30
+```
+
+## Deployment to Hugging Face Spaces
+
+This repository is configured for deployment to Hugging Face Spaces using Docker.
+
+### Requirements
+- Dockerfile at repository root
+- Proper environment configuration
+- All dependencies listed in requirements.txt
+
+### Steps
+1. Create a Hugging Face Space with Docker option
+2. Add the Dockerfile and app.py files to the repository
+3. Set environment variables in Space settings
+4. Push code to the Space repository
+
+## Local Development
+
+### Running the Application
+```bash
+cd apps/backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload --port 7860
+```
+
+### Testing
+```bash
+cd apps/backend
+pytest tests/
 ```
 
 ## Security
@@ -71,19 +112,3 @@ AI_RATE_LIMIT_PER_MINUTE=30
 - CORS configuration for API security
 - Security headers for XSS and CSRF protection
 - Conversation isolation to prevent cross-user data access
-
-## Architecture
-
-- **AI Agent**: OpenAI Agents SDK processes natural language and selects appropriate MCP tools
-- **MCP Server**: Standardized interface for todo operations accessible by AI agent
-- **Database**: Neon Serverless PostgreSQL stores all conversation and task data
-- **Stateless**: No server-side memory between requests - all state flows through database
-- **Security**: All operations validated through user authentication and authorization
-
-## Deployment
-
-This backend is designed for deployment to Hugging Face Spaces with Docker. Make sure to:
-1. Set the required environment variables in your Space settings
-2. Ensure your domain is added to OpenAI's domain allowlist if using ChatKit
-3. Configure the Neon database connection properly
-4. Test the health endpoint after deployment

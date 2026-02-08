@@ -3,7 +3,7 @@ Hugging Face Space App Entry Point
 This file is required for Hugging Face Spaces deployment
 """
 import os
-from apps.backend.src.main import app
+from main import app
 
 # This is the entry point for Hugging Face Spaces
 # The FastAPI app is imported from the main application file

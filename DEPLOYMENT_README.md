@@ -1,126 +1,29 @@
-# Todo AI Chatbot - Deployment Guide
-
-## Overview
-This guide provides instructions for deploying the Todo AI Chatbot to Hugging Face Spaces (backend) and Vercel (frontend).
-
-## Architecture
-- **Backend**: FastAPI application deployed to Hugging Face Spaces
-- **Frontend**: Next.js application deployed to Vercel
-- **Database**: Neon Serverless PostgreSQL
-- **AI**: OpenAI Agents SDK with MCP tools
+# Todo AI Chatbot Deployment Guide
 
 ## Backend Deployment (Hugging Face Spaces)
 
-### 1. Prerequisites
+### Prerequisites
 - Hugging Face account
-- OpenAI API key
-- Neon PostgreSQL database URL
-- Domain for OpenAI ChatKit (if using)
+- OpenAI API key (or Groq API key)
+- Neon Serverless PostgreSQL database
+- Domain registered with OpenAI ChatKit (for frontend)
 
-### 2. Create Hugging Face Space
-1. Go to https://huggingface.co/spaces
-2. Click "Create new Space"
-3. Choose "Docker" as SDK
-4. Choose "GPU" or "CPU" tier (CPU is sufficient for this application)
-5. Set visibility to "Public" or "Private" as needed
+### Configuration
+Set these environment variables in your Hugging Face Space settings:
 
-### 3. Configure Environment Variables
-In your Hugging Face Space settings, add the following environment variables:
-
-```env
-OPENAI_API_KEY=your-openai-api-key-here
-DATABASE_URL=postgresql://username:password@ep-xxx.us-east-1.aws.neon.tech/dbname
-SECRET_KEY=your-super-secret-key-change-in-production
-ENVIRONMENT=production
-DEBUG=false
-ALLOWED_ORIGINS=https://your-frontend-domain.vercel.app,https://your-frontend-domain.com,http://localhost:3000
-```
-
-### 4. Deploy Code
-1. Clone your Space repository:
-```bash
-git clone https://huggingface.co/spaces/YOUR_USERNAME/todo-ai-backend
-cd todo-ai-backend
-```
-
-2. Copy the following files to your Space repository:
-- `Dockerfile`
-- `app.py`
-- `apps/backend/src/` (entire directory)
-- `hf_requirements.txt` (rename to `requirements.txt`)
-
-3. Commit and push:
-```bash
-git add .
-git commit -m "Initial deployment"
-git push
-```
-
-### 5. Verify Backend
-- Access the Space URL: `https://YOUR_USERNAME-space-name.hf.space`
-- Test the health endpoint: `https://YOUR_USERNAME-space-name.hf.space/health`
-- Test the chat endpoint: `https://YOUR_USERNAME-space-name.hf.space/api/v1/chat`
-
-## Frontend Deployment (Vercel)
-
-### 1. Prerequisites
-- Vercel account
-- OpenAI ChatKit domain key (from security settings)
-
-### 2. Add Domain to OpenAI Allowlist
-1. Go to https://platform.openai.com/settings/organization/security/domain-allowlist
-2. Click "Add domain"
-3. Add your Vercel domain: `https://your-project-name.vercel.app`
-4. Save changes
-
-### 3. Deploy to Vercel
-1. Install Vercel CLI:
-```bash
-npm install -g vercel
-```
-
-2. Navigate to frontend directory:
-```bash
-cd apps/frontend
-```
-
-3. Deploy:
-```bash
-vercel --prod
-```
-
-Or connect your GitHub repository to Vercel for automatic deployments.
-
-### 4. Configure Environment Variables
-In your Vercel project settings, add these environment variables:
-
-```env
-NEXT_PUBLIC_BACKEND_URL=https://your-backend-space.hf.space
-NEXT_PUBLIC_OPENAI_DOMAIN_KEY=your-chatkit-domain-key-here
-NEXT_PUBLIC_APP_NAME=Todo AI Assistant
-NEXT_PUBLIC_APP_DESCRIPTION=AI-powered todo management with natural language
-```
-
-## Configuration Files
-
-### Backend Environment (.env)
 ```env
 # Database Configuration
 DATABASE_URL=postgresql://username:password@ep-xxx.us-east-1.aws.neon.tech/dbname
-NEON_DATABASE_URL=postgresql://username:password@ep-xxx.us-east-1.aws.neon.tech/dbname
 
-# OpenAI Configuration
+# AI Service Configuration (Choose one)
+GROQ_API_KEY=gsk_your_groq_key_here
+GROQ_MODEL=llama-3.1-70b-versatile
+AI_PROVIDER=groq
+
+# OR for OpenAI
 OPENAI_API_KEY=sk-your-openai-api-key-here
-OPENAI_MODEL=gpt-4-turbo
-AI_TEMPERATURE=0.7
-AI_MAX_TOKENS=1500
-
-# AI Agent Configuration
-AI_AGENT_NAME=Todo Assistant
-AI_AGENT_MODEL=gpt-4-turbo
-AI_AGENT_TEMPERATURE=0.7
-AI_AGENT_MAX_TOKENS=1500
-AI_AGENT_INSTRUCTIONS=You are a helpful todo management assistant that helps users manage their tasks using natural language. You can help create, update, delete, and list todos. You have access to tools for these operations. Always respond in a friendly and helpful manner.
+OPENAI_MODEL=gpt-4-turbo-preview
+AI_PROVIDER=openai
 
 # Security Configuration
 SECRET_KEY=your-super-secret-key-change-in-production
@@ -132,92 +35,141 @@ ENVIRONMENT=production
 DEBUG=false
 LOG_LEVEL=INFO
 
-# Rate Limiting
-RATE_LIMIT_REQUESTS=100
-RATE_LIMIT_WINDOW=3600
-AI_RATE_LIMIT_PER_MINUTE=30
-
 # CORS Settings
 ALLOWED_ORIGINS=https://your-frontend-domain.vercel.app,https://your-frontend-domain.com,http://localhost:3000
+
+# Rate Limiting
+AI_RATE_LIMIT_PER_MINUTE=30
 ```
 
-### Frontend Environment (.env.local)
+### Steps
+1. Create a new Hugging Face Space with Docker option
+2. Copy the files from `apps/backend/` to the Space repository
+3. Set environment variables in Space settings
+4. Push code to the repository
+
+## Frontend Deployment (Vercel)
+
+### Prerequisites
+- Vercel account
+- Domain registered with OpenAI ChatKit
+- Backend API endpoint URL
+
+### Configuration
+Set these environment variables in your Vercel project settings:
+
 ```env
 # Backend API Configuration
 NEXT_PUBLIC_BACKEND_URL=https://your-backend-space.hf.space
-NEXT_PUBLIC_API_BASE_URL=https://your-backend-space.hf.space/api
 
 # OpenAI ChatKit Configuration
 NEXT_PUBLIC_OPENAI_DOMAIN_KEY=your-chatkit-domain-key-here
 
 # Application Configuration
 NEXT_PUBLIC_APP_NAME=Todo AI Assistant
-NEXT_PUBLIC_APP_DESCRIPTION=AI-powered todo management with natural language
 NEXT_PUBLIC_BASE_URL=https://your-frontend-domain.vercel.app
-
-# Authentication
-NEXTAUTH_URL=https://your-frontend-domain.vercel.app
-NEXTAUTH_SECRET=your-nextauth-secret-here
-
-# Development Overrides
-NEXT_PUBLIC_DEV_BACKEND_URL=http://localhost:8000
-NEXT_PUBLIC_DEV_MODE=false
 ```
 
-## Deployment Sequence
+### Steps
+1. Connect your GitHub repository to Vercel
+2. Set environment variables in Vercel project settings
+3. Deploy automatically on pushes to main branch
 
-### Phase 1: Backend Deployment
-1. Set up Neon Serverless PostgreSQL database
-2. Configure Hugging Face Space with Dockerfile
-3. Set environment variables in Space settings
-4. Deploy backend to Hugging Face Space
-5. Verify backend API is accessible
+## API Endpoints
 
-### Phase 2: Frontend Deployment
-1. Add Vercel domain to OpenAI domain allowlist
-2. Deploy frontend to Vercel
-3. Set environment variables in Vercel settings
-4. Verify ChatKit integration works
+### Chat Endpoint
+- **Method**: POST
+- **Path**: `/api/{user_id}/chat`
+- **Authentication**: JWT Bearer token required
+- **Request Body**:
+  ```json
+  {
+    "message": "string (required)",
+    "conversation_id": "string (optional, UUID format)"
+  }
+  ```
+- **Response**:
+  ```json
+  {
+    "conversation_id": "string (UUID format)",
+    "response": "string (AI-generated response)",
+    "message_id": "string (UUID format of the assistant's response message)"
+  }
+  ```
 
-### Phase 3: Integration Testing
-1. Test full conversation flow
-2. Verify authentication works
-3. Test all MCP tools via AI agent
-4. Verify conversation persistence
+## Architecture Overview
 
-## Health Checks & Monitoring
+```
+┌─────────────────┐     ┌──────────────────────────────────────────────┐     ┌─────────────────┐
+│                 │     │              FastAPI Server                   │     │                 │
+│                 │     │  ┌────────────────────────────────────────┐  │     │    Neon DB      │
+│  ChatKit UI     │────▶│  │         Chat Endpoint                  │  │     │  (PostgreSQL)   │
+│  (Frontend)     │     │  │  POST /api/{user_id}/chat             │  │     │                 │
+│                 │     │  └───────────────┬────────────────────────┘  │     │  - tasks        │
+│                 │     │                  │                           │     │  - conversations│
+│                 │     │                  ▼                           │     │  - messages     │
+│                 │     │  ┌────────────────────────────────────────┐  │     │                 │
+│                 │     │  │      OpenAI Agents SDK                 │  │     │                 │
+│                 │     │  │      (Agent + Runner)                  │  │     │                 │
+│                 │     │  └───────────────┬────────────────────────┘  │     │                 │
+│                 │     │                  │                           │     │                 │
+│                 │     │                  ▼                           │     │                 │
+│                 │     │  ┌────────────────────────────────────────┐  │────▶│                 │
+│                 │     │  │         MCP Server                 │  │     │                 │
+│                 │     │  │  (MCP Tools for Task Operations)       │  │     │                 │
+│                 │     │  └────────────────────────────────────────┘  │     │                 │
+└─────────────────┘     └──────────────────────────────────────────────┘     └─────────────────┘
+```
 
-### Backend Health Endpoints
-- `/health` - Basic health check
-- `/api/v1/chat` - Chat functionality
-- Database connection validation
+## MCP Tools Available
 
-### Frontend Monitoring
-- Console error logging
-- Network request monitoring
-- User session tracking
+The system exposes the following tools via MCP for the AI agent:
 
-## Troubleshooting
+### add_task
+- Creates a new task for a user
+- Parameters: user_id (string), title (string), description (optional string)
 
-### Common Issues
-1. **ChatKit Domain Not Allowed**: Verify domain is added to OpenAI allowlist
-2. **Database Connection Issues**: Check Neon connection string and SSL settings
-3. **CORS Errors**: Verify ALLOWED_ORIGINS includes your frontend domain
-4. **AI Service Unavailable**: Check OPENAI_API_KEY and rate limits
+### list_tasks
+- Lists tasks for a user
+- Parameters: user_id (string), limit (optional integer), offset (optional integer)
 
-### Logs Access
-- Hugging Face Spaces: Access through Space interface
-- Vercel: Access through Vercel dashboard
-- Database: Access through Neon dashboard
+### update_task
+- Updates an existing task for a user
+- Parameters: user_id (string), task_id (string), title (optional string), description (optional string), is_completed (optional boolean)
 
-## Scaling Considerations
+### complete_task
+- Marks a task as complete or incomplete for a user
+- Parameters: user_id (string), task_id (string), is_completed (optional boolean, default: true)
 
-### Backend Scaling
-- Hugging Face Spaces automatically scales containers
-- Neon Serverless PostgreSQL scales automatically
-- Add Redis for session caching if needed for high traffic
+### delete_task
+- Deletes a task for a user
+- Parameters: user_id (string), task_id (string)
 
-### Rate Limiting
-- Per-user API rate limits configured
-- AI service usage monitoring
-- Database connection pooling
+## Security Features
+
+- JWT-based authentication with configurable expiration
+- User ownership validation for all conversation access
+- MCP tool-first architecture ensuring all operations are properly authorized
+- SQL injection prevention through SQLModel ORM
+- Rate limiting to prevent abuse of AI services
+- Input validation and sanitization including prompt injection prevention
+- CORS configuration for API security
+- Conversation isolation to prevent cross-user data access
+
+## Performance & Scalability
+
+- Stateless design supports horizontal scaling
+- Conversation data persisted in database (survives server restarts)
+- Efficient database queries with proper indexing
+- Connection pooling for database operations
+- Proper caching strategies where appropriate
+- Circuit breaker pattern for AI service calls
+- Retry logic with exponential backoff for failed calls
+
+## Monitoring & Logging
+
+- Health check endpoints: `/health` and `/api/health`
+- Comprehensive logging for debugging and monitoring
+- Tool usage tracking for analytics
+- Performance metrics collection
+- Error tracking and alerting

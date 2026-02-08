@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from sqlmodel import SQLModel
-from .database.engine import engine
+from .database import engine
 from .api.v1.auth import router as auth_router
 from .api.v1.todos import router as todos_router
 from .core.config import settings

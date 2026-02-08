@@ -1,5 +1,5 @@
 from sqlmodel import Session, select
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime
 import uuid
 from ..models.conversation import Conversation, ConversationRead

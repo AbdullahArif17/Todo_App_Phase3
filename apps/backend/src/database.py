@@ -5,11 +5,8 @@ import logging
 
 # Import models to ensure they are registered with SQLModel
 from .models.user import User
-from .models.todo_task import TodoTask
 from .models.conversation import Conversation
 from .models.message import Message
-from .models.tag import Tag
-from .models.template import Template
 
 # Configure logging
 logger = logging.getLogger(__name__)

@@ -1,16 +1,15 @@
 from sqlmodel import SQLModel, Field, Relationship
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Optional
 from datetime import datetime
 import uuid
 from sqlalchemy import Index
-
 if TYPE_CHECKING:
     from apps.backend.src.models.conversation import Conversation
 
 
 class MessageBase(SQLModel):
     conversation_id: uuid.UUID = Field(foreign_key="conversations.id", index=True)  # Add index
-    role: Literal["user", "assistant", "system"] = Field(max_length=20, index=True)  # Add index
+    role: str = Field(sa_column_kwargs={"index": True})  # Add index
     content: str = Field(sa_column_kwargs={"nullable": False, "index": True})  # Add index for search
     timestamp: datetime = Field(default_factory=datetime.utcnow, index=True)  # Add index
 

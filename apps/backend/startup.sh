@@ -17,12 +17,12 @@ echo "Debug: $DEBUG"
 
 # Run any necessary database migrations
 echo "Checking database migrations..."
-python -c "
+python3 -c '
 import sys
 import os
 # Add both the current directory and src directory to the Python path
-sys.path.insert(0, os.path.join(os.getcwd(), '.'))
-sys.path.insert(0, os.path.join(os.getcwd(), 'src'))
+sys.path.insert(0, os.path.join(os.getcwd(), "."))
+sys.path.insert(0, os.path.join(os.getcwd(), "src"))
 from sqlmodel import SQLModel
 from database import engine
 from models.conversation import Conversation
@@ -37,11 +37,11 @@ except ImportError:
 try:
     # Create database tables if they don't exist
     SQLModel.metadata.create_all(bind=engine)
-    print('Database tables created/updated successfully')
+    print("Database tables created/updated successfully")
 except Exception as e:
-    print(f'Warning: Could not initialize database: {e}')
-    # Don't exit on database error as it might be a connection issue
-"
+    print(f"Warning: Could not initialize database: {e}")
+    # Don'\''t exit on database error as it might be a connection issue
+'
 
 # Start the application with gunicorn
 echo "Starting application server..."

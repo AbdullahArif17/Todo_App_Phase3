@@ -385,26 +385,28 @@ class TodoAgent:
                     "content": str(result)  # Result of the function call
                 })
 
-            # Get the final response from the model after function calls
-            if settings.AI_PROVIDER.lower() == "groq":
-                final_response = await self.client.chat.completions.create(
-                    messages=messages,
-                    model=self.model,
-                    temperature=self.temperature,
-                    max_tokens=self.max_tokens,
-                )
-            else:
-                # Use OpenAI for final response
-                from openai import AsyncOpenAI
-                openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
-
-                final_response = await openai_client.chat.completions.create(
-                    messages=messages,
-                    model=self.model,
-                    temperature=self.temperature,
-                    max_tokens=self.max_tokens,
-                )
-
+        # Get the final response from the model after function calls
+        if settings.AI_PROVIDER.lower() == "groq":
+            final_response = await self.client.chat.completions.create(
+                messages=messages,
+                model=self.model,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+            )
         else:
-            # No tool calls were made, return the original response
-            return response_message.content
+            # Use OpenAI for final response
+            from openai import AsyncOpenAI
+            openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+
+            final_response = await openai_client.chat.completions.create(
+                messages=messages,
+                model=self.model,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+            )
+
+        return final_response.choices[0].message.content
+
+else:
+    # No tool calls were made, return the original response
+    return response_message.content

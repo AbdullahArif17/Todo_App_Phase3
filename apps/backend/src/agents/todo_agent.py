@@ -6,10 +6,8 @@ from groq import AsyncGroq
 from typing import Dict, Any, List, Optional
 import uuid
 from sqlmodel import Session
-
 from ..core.config import settings
 from ..mcp_server.main import mcp_todo_server
-
 
 class TodoAgent:
     """
@@ -386,27 +384,30 @@ class TodoAgent:
                 })
 
         # Get the final response from the model after function calls
-        if settings.AI_PROVIDER.lower() == "groq":
-            final_response = await self.client.chat.completions.create(
-                messages=messages,
-                model=self.model,
-                temperature=self.temperature,
-                max_tokens=self.max_tokens,
-            )
+            if settings.AI_PROVIDER.lower() == "groq":
+                final_response = await self.client.chat.completions.create(
+                    messages=messages,
+                    model=self.model,
+                    temperature=self.temperature,
+                    max_tokens=self.max_tokens,
+                )
+            else:
+                # Use OpenAI for final response
+                from openai import AsyncOpenAI
+                openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+
+                final_response = await openai_client.chat.completions.create(
+                    messages=messages,
+                    model=self.model,
+                    temperature=self.temperature,
+                    max_tokens=self.max_tokens,
+                )
+
+            return final_response.choices[0].message.content
+
         else:
-            # Use OpenAI for final response
-            from openai import AsyncOpenAI
-            openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+            # No tool calls were made, return the original response
+            return response_message.content
 
-            final_response = await openai_client.chat.completions.create(
-                messages=messages,
-                model=self.model,
-                temperature=self.temperature,
-                max_tokens=self.max_tokens,
-            )
 
-        return final_response.choices[0].message.content
-
-else:
-    # No tool calls were made, return the original response
-    return response_message.content
+todo_agent = TodoAgent()

@@ -1,9 +1,7 @@
-"""
-MCP Server for Todo Operations
-Implements the Official MCP SDK to expose todo operations as tools for AI agents
-"""
 from mcp.server import Server
-from mcp.types import ToolResult
+from mcp.types import CallToolResult, TextContent
+import json
+
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
 import asyncio
@@ -97,24 +95,36 @@ class MCPTodoServer:
 
                     created_task = self.todo_service.create_todo(session, user_uuid, todo_create)
 
-                    return ToolResult(
-                        content={
-                            "success": True,
-                            "message": f"Task '{params.title}' created successfully",
-                            "task": {
-                                "id": str(created_task.id),
-                                "title": created_task.title,
-                                "description": created_task.description,
-                                "is_completed": created_task.is_completed
-                            }
-                        }
+                    return CallToolResult(
+                        content=[
+                            TextContent(
+                                type="text",
+                                text=json.dumps({
+                                    "success": True,
+                                    "message": f"Task '{params.title}' created successfully",
+                                    "task": {
+                                        "id": str(created_task.id),
+                                        "title": created_task.title,
+                                        "description": created_task.description,
+                                        "is_completed": created_task.is_completed
+                                    }
+                                })
+                            )
+                        ],
+                        is_error=False
                     )
             except Exception as e:
-                return ToolResult(
-                    content={
-                        "success": False,
-                        "error": str(e)
-                    }
+                return CallToolResult(
+                    content=[
+                        TextContent(
+                            type="text",
+                            text=json.dumps({
+                                "success": False,
+                                "error": str(e)
+                            })
+                        )
+                    ],
+                    is_error=True
                 )
 
         @self.server.tool(
@@ -130,7 +140,7 @@ class MCPTodoServer:
                 "required": ["user_id"]
             }
         )
-        async def list_tasks_handler(arguments: Dict[str, Any]) -> ToolResult:
+        async def list_tasks_handler(arguments: Dict[str, Any]) -> CallToolResult:
             """Handler for list_tasks tool."""
             try:
                 params = ListTasksParams(**arguments)
@@ -140,12 +150,7 @@ class MCPTodoServer:
 
                 # List tasks using TodoService
                 with Session(engine) as session:
-                    tasks = self.todo_service.get_todos_by_user_id(
-                        session,
-                        user_uuid,
-                        skip=params.offset,
-                        limit=params.limit
-                    )
+                    tasks = self.todo_service.get_user_todos(user_uuid, params.offset, params.limit, session)
 
                     tasks_list = [
                         {
@@ -157,19 +162,31 @@ class MCPTodoServer:
                         for task in tasks
                     ]
 
-                    return ToolResult(
-                        content={
-                            "success": True,
-                            "message": f"Retrieved {len(tasks_list)} tasks for user",
-                            "tasks": tasks_list
-                        }
+                    return CallToolResult(
+                        content=[
+                            TextContent(
+                                type="text",
+                                text=json.dumps({
+                                    "success": True,
+                                    "message": f"Retrieved {len(tasks_list)} tasks for user",
+                                    "tasks": tasks_list
+                                })
+                            )
+                        ],
+                        is_error=False
                     )
             except Exception as e:
-                return ToolResult(
-                    content={
-                        "success": False,
-                        "error": str(e)
-                    }
+                return CallToolResult(
+                    content=[
+                        TextContent(
+                            type="text",
+                            text=json.dumps({
+                                "success": False,
+                                "error": str(e)
+                            })
+                        )
+                    ],
+                    is_error=True
                 )
 
         @self.server.tool(
@@ -187,7 +204,7 @@ class MCPTodoServer:
                 "required": ["user_id", "task_id"]
             }
         )
-        async def update_task_handler(arguments: Dict[str, Any]) -> ToolResult:
+        async def update_task_handler(arguments: Dict[str, Any]) -> CallToolResult:
             """Handler for update_task tool."""
             try:
                 params = UpdateTaskParams(**arguments)
@@ -199,13 +216,21 @@ class MCPTodoServer:
                 # Update task using TodoService
                 with Session(engine) as session:
                     # First, get the existing task to check ownership
-                    existing_task = self.todo_service.get_todo_by_id(session, task_uuid, user_uuid)
+                    from apps.backend.src.models.user import User
+                    temp_user = User(id=user_uuid, email="temp@example.com")
+                    existing_task = await self.todo_service.get_todo_by_id(task_uuid, temp_user, session)
                     if not existing_task:
-                        return ToolResult(
-                            content={
-                                "success": False,
-                                "error": "Task not found or does not belong to user"
-                            }
+                        return CallToolResult(
+                            content=[
+                                TextContent(
+                                    type="text",
+                                    text=json.dumps({
+                                        "success": False,
+                                        "error": "Task not found or does not belong to user"
+                                    })
+                                )
+                            ],
+                            is_error=True
                         )
 
                     # Prepare update data
@@ -219,34 +244,52 @@ class MCPTodoServer:
                         update_data["is_completed"] = params.is_completed
 
                     if not update_data:
-                        return ToolResult(
-                            content={
-                                "success": False,
-                                "error": "No fields provided for update"
-                            }
+                        return CallToolResult(
+                            content=[
+                                TextContent(
+                                    type="text",
+                                    text=json.dumps({
+                                        "success": False,
+                                        "error": "No fields provided for update"
+                                    })
+                                )
+                            ],
+                            is_error=True
                         )
 
                     todo_update = TodoTaskUpdate(**update_data)
-                    updated_task = self.todo_service.update_todo(session, task_uuid, user_uuid, todo_update)
+                    updated_task = await self.todo_service.update_todo(task_uuid, todo_update, temp_user, session)
 
-                    return ToolResult(
-                        content={
-                            "success": True,
-                            "message": f"Task '{updated_task.title}' updated successfully",
-                            "task": {
-                                "id": str(updated_task.id),
-                                "title": updated_task.title,
-                                "description": updated_task.description,
-                                "is_completed": updated_task.is_completed
-                            }
-                        }
+                    return CallToolResult(
+                        content=[
+                            TextContent(
+                                type="text",
+                                text=json.dumps({
+                                    "success": True,
+                                    "message": f"Task '{updated_task.title}' updated successfully",
+                                    "task": {
+                                        "id": str(updated_task.id),
+                                        "title": updated_task.title,
+                                        "description": updated_task.description,
+                                        "is_completed": updated_task.is_completed
+                                    }
+                                })
+                            )
+                        ],
+                        is_error=False
                     )
             except Exception as e:
-                return ToolResult(
-                    content={
-                        "success": False,
-                        "error": str(e)
-                    }
+                return CallToolResult(
+                    content=[
+                        TextContent(
+                            type="text",
+                            text=json.dumps({
+                                "success": False,
+                                "error": str(e)
+                            })
+                        )
+                    ],
+                    is_error=True
                 )
 
         @self.server.tool(
@@ -262,7 +305,7 @@ class MCPTodoServer:
                 "required": ["user_id", "task_id"]
             }
         )
-        async def complete_task_handler(arguments: Dict[str, Any]) -> ToolResult:
+        async def complete_task_handler(arguments: Dict[str, Any]) -> CallToolResult:
             """Handler for complete_task tool."""
             try:
                 params = CompleteTaskParams(**arguments)
@@ -274,39 +317,57 @@ class MCPTodoServer:
                 # Update task completion status using TodoService
                 with Session(engine) as session:
                     # First, get the existing task to check ownership
-                    existing_task = self.todo_service.get_todo_by_id(session, task_uuid, user_uuid)
+                    from apps.backend.src.models.user import User
+                    temp_user = User(id=user_uuid, email="temp@example.com")
+                    existing_task = await self.todo_service.get_todo_by_id(task_uuid, temp_user, session)
                     if not existing_task:
-                        return ToolResult(
-                            content={
-                                "success": False,
-                                "error": "Task not found or does not belong to user"
-                            }
+                        return CallToolResult(
+                            content=[
+                                TextContent(
+                                    type="text",
+                                    text=json.dumps({
+                                        "success": False,
+                                        "error": "Task not found or does not belong to user"
+                                    })
+                                )
+                            ],
+                            is_error=True
                         )
 
                     # Update completion status
-                    from apps.backend.src.schemas.todo_task import TodoTaskUpdate
-                    todo_update = TodoTaskUpdate(is_completed=params.is_completed)
-                    updated_task = self.todo_service.update_todo(session, task_uuid, user_uuid, todo_update)
+                    updated_task = await self.todo_service.toggle_todo_completion(task_uuid, params.is_completed, temp_user, session)
 
                     status_text = "completed" if params.is_completed else "marked as incomplete"
-                    return ToolResult(
-                        content={
-                            "success": True,
-                            "message": f"Task '{updated_task.title}' has been {status_text}",
-                            "task": {
-                                "id": str(updated_task.id),
-                                "title": updated_task.title,
-                                "description": updated_task.description,
-                                "is_completed": updated_task.is_completed
-                            }
-                        }
+                    return CallToolResult(
+                        content=[
+                            TextContent(
+                                type="text",
+                                text=json.dumps({
+                                    "success": True,
+                                    "message": f"Task '{updated_task.title}' has been {status_text}",
+                                    "task": {
+                                        "id": str(updated_task.id),
+                                        "title": updated_task.title,
+                                        "description": updated_task.description,
+                                        "is_completed": updated_task.is_completed
+                                    }
+                                })
+                            )
+                        ],
+                        is_error=False
                     )
             except Exception as e:
-                return ToolResult(
-                    content={
-                        "success": False,
-                        "error": str(e)
-                    }
+                return CallToolResult(
+                    content=[
+                        TextContent(
+                            type="text",
+                            text=json.dumps({
+                                "success": False,
+                                "error": str(e)
+                            })
+                        )
+                    ],
+                    is_error=True
                 )
 
         @self.server.tool(
@@ -321,7 +382,7 @@ class MCPTodoServer:
                 "required": ["user_id", "task_id"]
             }
         )
-        async def delete_task_handler(arguments: Dict[str, Any]) -> ToolResult:
+        async def delete_task_handler(arguments: Dict[str, Any]) -> CallToolResult:
             """Handler for delete_task tool."""
             try:
                 params = DeleteTaskParams(**arguments)
@@ -333,37 +394,63 @@ class MCPTodoServer:
                 # Delete task using TodoService
                 with Session(engine) as session:
                     # First, verify the task exists and belongs to the user
-                    existing_task = self.todo_service.get_todo_by_id(session, task_uuid, user_uuid)
+                    from apps.backend.src.models.user import User
+                    temp_user = User(id=user_uuid, email="temp@example.com")
+                    existing_task = await self.todo_service.get_todo_by_id(task_uuid, temp_user, session)
                     if not existing_task:
-                        return ToolResult(
-                            content={
-                                "success": False,
-                                "error": "Task not found or does not belong to user"
-                            }
+                        return CallToolResult(
+                            content=[
+                                TextContent(
+                                    type="text",
+                                    text=json.dumps({
+                                        "success": False,
+                                        "error": "Task not found or does not belong to user"
+                                    })
+                                )
+                            ],
+                            is_error=True
                         )
 
-                    success = self.todo_service.delete_todo(session, task_uuid, user_uuid)
+                    success = await self.todo_service.delete_todo(task_uuid, temp_user, session)
 
                     if success:
-                        return ToolResult(
-                            content={
-                                "success": True,
-                                "message": "Task deleted successfully"
-                            }
+                        return CallToolResult(
+                            content=[
+                                TextContent(
+                                    type="text",
+                                    text=json.dumps({
+                                        "success": True,
+                                        "message": "Task deleted successfully"
+                                    })
+                                )
+                            ],
+                            is_error=False
                         )
                     else:
-                        return ToolResult(
-                            content={
-                                "success": False,
-                                "error": "Failed to delete task"
-                            }
+                        return CallToolResult(
+                            content=[
+                                TextContent(
+                                    type="text",
+                                    text=json.dumps({
+                                        "success": False,
+                                        "error": "Failed to delete task"
+                                    })
+                                )
+                            ],
+                            is_error=True
                         )
             except Exception as e:
-                return ToolResult(
-                    content={
-                        "success": False,
-                        "error": str(e)
-                    }
+                return CallToolResult(
+                    content=[
+                        TextContent(
+                            type="text",
+                            text=json.dumps({
+                                "success": False,
+                                "error": str(e)
+                            })
+                        )
+                    ],
+                    is_error=True
                 )
 
     def get_server(self):

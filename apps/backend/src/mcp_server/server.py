@@ -1,9 +1,7 @@
-"""
-MCP Server for Todo Operations
-Implements the Official MCP SDK to expose todo operations as tools for AI agents
-"""
 from mcp.server import Server
-from mcp.types import Tool, ToolResult
+from mcp.types import Tool, CallToolResult, TextContent
+import json
+
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import asyncio
@@ -76,7 +74,7 @@ class MCPTodoServer:
                 "required": ["user_id", "title"]
             }
         )
-        async def add_task_handler(arguments: Dict[str, Any]) -> ToolResult:
+        async def add_task_handler(arguments: Dict[str, Any]) -> CallToolResult:
             """Handler for add_task tool."""
             try:
                 params = AddTaskParams(**arguments)
@@ -85,11 +83,16 @@ class MCPTodoServer:
                 try:
                     user_uuid = uuid.UUID(params.user_id)
                 except ValueError:
-                    return ToolResult(
-                        content={
-                            "success": False,
-                            "error": "Invalid UUID format for user_id"
-                        },
+                    return CallToolResult(
+                        content=[
+                            TextContent(
+                                type="text",
+                                text=json.dumps({
+                                    "success": False,
+                                    "error": "Invalid UUID format for user_id"
+                                })
+                            )
+                        ],
                         is_error=True
                     )
 
@@ -105,25 +108,35 @@ class MCPTodoServer:
 
                     created_task = await self.todo_service.create_todo(todo_data=todo_create, user_id=user_uuid, db_session=session)
 
-                    return ToolResult(
-                        content={
-                            "success": True,
-                            "message": f"Task '{params.title}' created successfully",
-                            "task": {
-                                "id": str(created_task.id),
-                                "title": created_task.title,
-                                "description": created_task.description,
-                                "is_completed": created_task.is_completed
-                            }
-                        },
+                    return CallToolResult(
+                        content=[
+                            TextContent(
+                                type="text",
+                                text=json.dumps({
+                                    "success": True,
+                                    "message": f"Task '{params.title}' created successfully",
+                                    "task": {
+                                        "id": str(created_task.id),
+                                        "title": created_task.title,
+                                        "description": created_task.description,
+                                        "is_completed": created_task.is_completed
+                                    }
+                                })
+                            )
+                        ],
                         is_error=False
                     )
             except Exception as e:
-                return ToolResult(
-                    content={
-                        "success": False,
-                        "error": str(e)
-                    },
+                return CallToolResult(
+                    content=[
+                        TextContent(
+                            type="text",
+                            text=json.dumps({
+                                "success": False,
+                                "error": str(e)
+                            })
+                        )
+                    ],
                     is_error=True
                 )
 
@@ -140,7 +153,7 @@ class MCPTodoServer:
                 "required": ["user_id"]
             }
         )
-        async def list_tasks_handler(arguments: Dict[str, Any]) -> ToolResult:
+        async def list_tasks_handler(arguments: Dict[str, Any]) -> CallToolResult:
             """Handler for list_tasks tool."""
             try:
                 params = ListTasksParams(**arguments)
@@ -149,11 +162,16 @@ class MCPTodoServer:
                 try:
                     user_uuid = uuid.UUID(params.user_id)
                 except ValueError:
-                    return ToolResult(
-                        content={
-                            "success": False,
-                            "error": "Invalid UUID format for user_id"
-                        },
+                    return CallToolResult(
+                        content=[
+                            TextContent(
+                                type="text",
+                                text=json.dumps({
+                                    "success": False,
+                                    "error": "Invalid UUID format for user_id"
+                                })
+                            )
+                        ],
                         is_error=True
                     )
 
@@ -179,20 +197,30 @@ class MCPTodoServer:
                         for task in limited_tasks
                     ]
 
-                    return ToolResult(
-                        content={
-                            "success": True,
-                            "message": f"Retrieved {len(tasks_list)} tasks for user",
-                            "tasks": tasks_list
-                        },
+                    return CallToolResult(
+                        content=[
+                            TextContent(
+                                type="text",
+                                text=json.dumps({
+                                    "success": True,
+                                    "message": f"Retrieved {len(tasks_list)} tasks for user",
+                                    "tasks": tasks_list
+                                })
+                            )
+                        ],
                         is_error=False
                     )
             except Exception as e:
-                return ToolResult(
-                    content={
-                        "success": False,
-                        "error": str(e)
-                    },
+                return CallToolResult(
+                    content=[
+                        TextContent(
+                            type="text",
+                            text=json.dumps({
+                                "success": False,
+                                "error": str(e)
+                            })
+                        )
+                    ],
                     is_error=True
                 )
 
@@ -211,7 +239,7 @@ class MCPTodoServer:
                 "required": ["user_id", "task_id"]
             }
         )
-        async def update_task_handler(arguments: Dict[str, Any]) -> ToolResult:
+        async def update_task_handler(arguments: Dict[str, Any]) -> CallToolResult:
             """Handler for update_task tool."""
             try:
                 params = UpdateTaskParams(**arguments)
@@ -221,11 +249,16 @@ class MCPTodoServer:
                     user_uuid = uuid.UUID(params.user_id)
                     task_uuid = uuid.UUID(params.task_id)
                 except ValueError:
-                    return ToolResult(
-                        content={
-                            "success": False,
-                            "error": "Invalid UUID format for user_id or task_id"
-                        },
+                    return CallToolResult(
+                        content=[
+                            TextContent(
+                                type="text",
+                                text=json.dumps({
+                                    "success": False,
+                                    "error": "Invalid UUID format for user_id or task_id"
+                                })
+                            )
+                        ],
                         is_error=True
                     )
 
@@ -247,11 +280,16 @@ class MCPTodoServer:
                         update_data["is_completed"] = params.is_completed
 
                     if not update_data:
-                        return ToolResult(
-                            content={
-                                "success": False,
-                                "error": "No fields provided for update"
-                            },
+                        return CallToolResult(
+                            content=[
+                                TextContent(
+                                    type="text",
+                                    text=json.dumps({
+                                        "success": False,
+                                        "error": "No fields provided for update"
+                                    })
+                                )
+                            ],
                             is_error=True
                         )
 
@@ -264,33 +302,48 @@ class MCPTodoServer:
                     )
 
                     if updated_task:
-                        return ToolResult(
-                            content={
-                                "success": True,
-                                "message": f"Task '{updated_task.title}' updated successfully",
-                                "task": {
-                                    "id": str(updated_task.id),
-                                    "title": updated_task.title,
-                                    "description": updated_task.description,
-                                    "is_completed": updated_task.is_completed
-                                }
-                            },
+                        return CallToolResult(
+                            content=[
+                                TextContent(
+                                    type="text",
+                                    text=json.dumps({
+                                        "success": True,
+                                        "message": f"Task '{updated_task.title}' updated successfully",
+                                        "task": {
+                                            "id": str(updated_task.id),
+                                            "title": updated_task.title,
+                                            "description": updated_task.description,
+                                            "is_completed": updated_task.is_completed
+                                        }
+                                    })
+                                )
+                            ],
                             is_error=False
                         )
                     else:
-                        return ToolResult(
-                            content={
-                                "success": False,
-                                "error": "Task not found or user not authorized to update"
-                            },
+                        return CallToolResult(
+                            content=[
+                                TextContent(
+                                    type="text",
+                                    text=json.dumps({
+                                        "success": False,
+                                        "error": "Task not found or user not authorized to update"
+                                    })
+                                )
+                            ],
                             is_error=True
                         )
             except Exception as e:
-                return ToolResult(
-                    content={
-                        "success": False,
-                        "error": str(e)
-                    },
+                return CallToolResult(
+                    content=[
+                        TextContent(
+                            type="text",
+                            text=json.dumps({
+                                "success": False,
+                                "error": str(e)
+                            })
+                        )
+                    ],
                     is_error=True
                 )
 
@@ -307,7 +360,7 @@ class MCPTodoServer:
                 "required": ["user_id", "task_id"]
             }
         )
-        async def complete_task_handler(arguments: Dict[str, Any]) -> ToolResult:
+        async def complete_task_handler(arguments: Dict[str, Any]) -> CallToolResult:
             """Handler for complete_task tool."""
             try:
                 params = CompleteTaskParams(**arguments)
@@ -317,11 +370,16 @@ class MCPTodoServer:
                     user_uuid = uuid.UUID(params.user_id)
                     task_uuid = uuid.UUID(params.task_id)
                 except ValueError:
-                    return ToolResult(
-                        content={
-                            "success": False,
-                            "error": "Invalid UUID format for user_id or task_id"
-                        },
+                    return CallToolResult(
+                        content=[
+                            TextContent(
+                                type="text",
+                                text=json.dumps({
+                                    "success": False,
+                                    "error": "Invalid UUID format for user_id or task_id"
+                                })
+                            )
+                        ],
                         is_error=True
                     )
 
@@ -341,33 +399,48 @@ class MCPTodoServer:
 
                     if updated_task:
                         status_text = "completed" if params.is_completed else "marked as incomplete"
-                        return ToolResult(
-                            content={
-                                "success": True,
-                                "message": f"Task '{updated_task.title}' has been {status_text}",
-                                "task": {
-                                    "id": str(updated_task.id),
-                                    "title": updated_task.title,
-                                    "description": updated_task.description,
-                                    "is_completed": updated_task.is_completed
-                                }
-                            },
+                        return CallToolResult(
+                            content=[
+                                TextContent(
+                                    type="text",
+                                    text=json.dumps({
+                                        "success": True,
+                                        "message": f"Task '{updated_task.title}' has been {status_text}",
+                                        "task": {
+                                            "id": str(updated_task.id),
+                                            "title": updated_task.title,
+                                            "description": updated_task.description,
+                                            "is_completed": updated_task.is_completed
+                                        }
+                                    })
+                                )
+                            ],
                             is_error=False
                         )
                     else:
-                        return ToolResult(
-                            content={
-                                "success": False,
-                                "error": "Task not found or user not authorized to update"
-                            },
+                        return CallToolResult(
+                            content=[
+                                TextContent(
+                                    type="text",
+                                    text=json.dumps({
+                                        "success": False,
+                                        "error": "Task not found or user not authorized to update"
+                                    })
+                                )
+                            ],
                             is_error=True
                         )
             except Exception as e:
-                return ToolResult(
-                    content={
-                        "success": False,
-                        "error": str(e)
-                    },
+                return CallToolResult(
+                    content=[
+                        TextContent(
+                            type="text",
+                            text=json.dumps({
+                                "success": False,
+                                "error": str(e)
+                            })
+                        )
+                    ],
                     is_error=True
                 )
 
@@ -393,11 +466,16 @@ class MCPTodoServer:
                     user_uuid = uuid.UUID(params.user_id)
                     task_uuid = uuid.UUID(params.task_id)
                 except ValueError:
-                    return ToolResult(
-                        content={
-                            "success": False,
-                            "error": "Invalid UUID format for user_id or task_id"
-                        },
+                    return CallToolResult(
+                        content=[
+                            TextContent(
+                                type="text",
+                                text=json.dumps({
+                                    "success": False,
+                                    "error": "Invalid UUID format for user_id or task_id"
+                                })
+                            )
+                        ],
                         is_error=True
                     )
 
@@ -415,27 +493,42 @@ class MCPTodoServer:
                     )
 
                     if success:
-                        return ToolResult(
-                            content={
-                                "success": True,
-                                "message": "Task deleted successfully"
-                            },
+                        return CallToolResult(
+                            content=[
+                                TextContent(
+                                    type="text",
+                                    text=json.dumps({
+                                        "success": True,
+                                        "message": "Task deleted successfully"
+                                    })
+                                )
+                            ],
                             is_error=False
                         )
                     else:
-                        return ToolResult(
-                            content={
-                                "success": False,
-                                "error": "Task not found or user not authorized to delete"
-                            },
+                        return CallToolResult(
+                            content=[
+                                TextContent(
+                                    type="text",
+                                    text=json.dumps({
+                                        "success": False,
+                                        "error": "Task not found or user not authorized to delete"
+                                    })
+                                )
+                            ],
                             is_error=True
                         )
             except Exception as e:
-                return ToolResult(
-                    content={
-                        "success": False,
-                        "error": str(e)
-                    },
+                return CallToolResult(
+                    content=[
+                        TextContent(
+                            type="text",
+                            text=json.dumps({
+                                "success": False,
+                                "error": str(e)
+                            })
+                        )
+                    ],
                     is_error=True
                 )
 

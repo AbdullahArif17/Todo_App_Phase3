@@ -8,8 +8,8 @@ import asyncio
 import uuid
 from sqlmodel import Session
 
-from apps.backend.src.services.todo_service import TodoService
-from apps.backend.src.database import engine
+from ..services.todo_service import TodoService
+from ..database import engine
 
 
 class AddTaskParams(BaseModel):
@@ -98,7 +98,7 @@ class MCPTodoServer:
 
                 # Create task using TodoService
                 with Session(engine) as session:
-                    from apps.backend.src.models.todo_task import TodoTaskCreate
+                    from ..models.todo_task import TodoTaskCreate
 
                     todo_create = TodoTaskCreate(
                         title=params.title,
@@ -177,7 +177,7 @@ class MCPTodoServer:
 
                 # List tasks using TodoService
                 with Session(engine) as session:
-                    from apps.backend.src.models.user import User
+                    from ..models.user import User
 
                     # Create a temporary user object to pass to the service
                     temp_user = User(id=user_uuid, email="temp@example.com", is_active=True, hashed_password="temp")
@@ -264,8 +264,8 @@ class MCPTodoServer:
 
                 # Update task using TodoService
                 with Session(engine) as session:
-                    from apps.backend.src.models.user import User
-                    from apps.backend.src.models.todo_task import TodoTaskUpdate
+                    from ..models.user import User
+                    from ..models.todo_task import TodoTaskUpdate
 
                     # Create temporary user object
                     temp_user = User(id=user_uuid, email="temp@example.com", is_active=True, hashed_password="temp")
@@ -385,7 +385,7 @@ class MCPTodoServer:
 
                 # Update task completion status using TodoService
                 with Session(engine) as session:
-                    from apps.backend.src.models.user import User
+                    from ..models.user import User
 
                     # Create temporary user object
                     temp_user = User(id=user_uuid, email="temp@example.com", is_active=True, hashed_password="temp")
@@ -456,7 +456,7 @@ class MCPTodoServer:
                 "required": ["user_id", "task_id"]
             }
         )
-        async def delete_task_handler(arguments: Dict[str, Any]) -> ToolResult:
+        async def delete_task_handler(arguments: Dict[str, Any]) -> CallToolResult:
             """Handler for delete_task tool."""
             try:
                 params = DeleteTaskParams(**arguments)
@@ -481,7 +481,7 @@ class MCPTodoServer:
 
                 # Delete task using TodoService
                 with Session(engine) as session:
-                    from apps.backend.src.models.user import User
+                    from ..models.user import User
 
                     # Create temporary user object
                     temp_user = User(id=user_uuid, email="temp@example.com", is_active=True, hashed_password="temp")

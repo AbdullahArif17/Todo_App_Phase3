@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
-from typing import Dict
+from typing import Dict, Any
 from src.api.deps import get_db_session, get_current_active_user
 from src.services.auth_service import AuthService
 from src.models.user import UserCreate, UserLogin, UserResponse

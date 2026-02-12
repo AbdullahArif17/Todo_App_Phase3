@@ -6,58 +6,52 @@ class ApiService {
   constructor() {
     let rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7860';
 
-    // Log the raw URL from environment variable for debugging
     if (typeof window !== 'undefined') {
-      console.log('Raw NEXT_PUBLIC_API_BASE_URL from env:', rawBaseURL);
+      console.log('[API] Environment variable URL:', rawBaseURL);
     }
 
-    // Ensure HTTPS is used in production
-    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1')) {
-      // In production, ensure the URL starts with https://
-      if (!rawBaseURL.startsWith('https://') && !rawBaseURL.startsWith('http://')) {
-        rawBaseURL = 'https://' + rawBaseURL;
-      } else if (rawBaseURL.startsWith('http://')) {
-        rawBaseURL = rawBaseURL.replace('http://', 'https://');
+    // Standardize URL
+    let processed = rawBaseURL.trim();
+    if (processed.endsWith('/')) {
+      processed = processed.slice(0, -1);
+    }
+
+    // If baseURL ends with /api, we strip it because all our endpoint paths start with /api/v1
+    // This prevents the common ERROR: https://domain.com/api/api/v1/...
+    if (processed.endsWith('/api')) {
+      processed = processed.slice(0, -4);
+    }
+
+    // Enforce HTTPS if not on localhost
+    if (typeof window !== 'undefined' && 
+        window.location.hostname !== 'localhost' && 
+        !window.location.hostname.includes('127.0.0.1')) {
+      if (processed.startsWith('http://')) {
+        processed = processed.replace('http://', 'https://');
       }
-
-      // Additional check: if it contains the Hugging Face domain, enforce HTTPS
-      if (rawBaseURL.includes('huggingface.co') || rawBaseURL.includes('.hf.space')) {
-        rawBaseURL = rawBaseURL.replace('http://', 'https://');
-      }
     }
 
-    // Remove trailing slash if present
-    let processedBaseURL = rawBaseURL.endsWith('/') ? rawBaseURL.slice(0, -1) : rawBaseURL;
-    
-    // If baseURL ends with /api, remove it because our endpoints already start with /api
-    // This handles the case where NEXT_PUBLIC_API_BASE_URL=https://.../api
-    if (processedBaseURL.endsWith('/api')) {
-      processedBaseURL = processedBaseURL.slice(0, -4);
-    }
-    
-    this.baseURL = processedBaseURL;
+    this.baseURL = processed;
 
-    // Log the final processed URL for debugging (will show in console in both dev and prod)
     if (typeof window !== 'undefined') {
-      console.log('Final API Service BaseURL:', this.baseURL);
+      console.log('[API] BaseURL set to:', this.baseURL);
     }
 
-    this.timeout = 10000;
+    this.timeout = 15000;
   }
 
   private async request(endpoint: string, options: RequestInit = {}): Promise<Response> {
-    // Remove leading slash from endpoint for proper concatenation
-    const normalizedEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
-
-    // Simple concatenation since baseURL is cleaned up in constructor
-    let url = `${this.baseURL}/${normalizedEndpoint}`;
-
-    // Ensure no double slashes (except after http:/https:)
+    // Ensure endpoint has a leading slash
+    const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    
+    // Construct final URL
+    let url = `${this.baseURL}${path}`;
+    
+    // Clean double slashes (except in protocol)
     url = url.replace(/([^:]\/)\/+/g, "$1");
 
-    // Log the constructed URL with a clear label to confirm code is updated
     if (typeof window !== 'undefined') {
-      console.log('Final Request URL [v2]:', url);
+      console.log(`[API Request] ${options.method || 'GET'} ${url}`);
     }
 
     const config: RequestInit = {
@@ -68,9 +62,8 @@ class ApiService {
       ...options,
     };
 
-    // Add auth token if available
     const token = localStorage.getItem('access_token');
-    if (token && !config.headers?.['Authorization']) {
+    if (token) {
       (config.headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
     }
 
@@ -85,23 +78,40 @@ class ApiService {
 
       clearTimeout(timeoutId);
 
-      // Handle token expiration
-      if (response.status === 401) {
+      // Log response for debugging
+      if (typeof window !== 'undefined') {
+        console.log(`[API Response] ${response.status} from ${url}`);
+      }
+
+      // Handle common errors
+      if (response.status === 401 && !path.includes('/auth/login')) {
+        console.warn('Unauthorized detected, clearing session');
         localStorage.removeItem('access_token');
-        window.location.href = '/auth/sign-in';
-        throw new Error('Unauthorized: Please log in again');
+        localStorage.removeItem('user');
+        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth/')) {
+           window.location.href = '/auth/sign-in';
+        }
       }
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        const errorBody = await response.text();
+        console.error(`[API Error] Body:`, errorBody);
+        
+        let detail = `Error ${response.status}`;
+        try {
+          const parsed = JSON.parse(errorBody);
+          detail = parsed.detail || detail;
+        } catch (e) {
+          detail = errorBody || detail;
+        }
+        throw new Error(detail);
       }
 
       return response;
     } catch (error: unknown) {
       clearTimeout(timeoutId);
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Request timeout');
+        throw new Error('Connection timed out. The backend might be sleeping or unreachable.');
       }
       throw error;
     }
@@ -138,9 +148,7 @@ class ApiService {
 
   async delete<T>(endpoint: string): Promise<T> {
     const response = await this.request(endpoint, { method: 'DELETE' });
-    // For DELETE requests, we might get an empty response
     if (response.status === 204 || response.status === 200) {
-      // No content or successful deletion, return an empty object
       return {} as T;
     }
     return response.json();

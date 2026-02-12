@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = os.getenv("DATABASE_URL") or os.getenv("NEON_DATABASE_URL") or "postgresql://todo_user:todo_password@localhost:5432/todo_db"
 
     # Security settings
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-super-secret-key-change-in-production")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "4788b675dd8701b65ebef977cc0d58a3694aa79b2b7c7b8dbb9f64d8249035c5")
     ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 

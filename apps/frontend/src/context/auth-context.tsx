@@ -27,91 +27,99 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in on initial load
-    const token = localStorage.getItem('access_token');
-    const storedUser = localStorage.getItem('user');
-    
-    if (token && storedUser && storedUser !== "undefined" && storedUser !== "null") {
+    const checkSession = () => {
       try {
-        const parsedUser = JSON.parse(storedUser);
-        if (parsedUser && parsedUser.id) {
-          console.log('Restored user from storage:', parsedUser.email);
-          setUser(parsedUser);
-          setIsAuthenticated(true);
-        } else {
-          console.warn('Stored user was invalid, clearing session');
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('user');
+        const token = localStorage.getItem('access_token');
+        const storedUser = localStorage.getItem('user');
+        
+        if (token && storedUser && storedUser !== "undefined" && storedUser !== "null") {
+          const parsedUser = JSON.parse(storedUser);
+          if (parsedUser && (parsedUser.id || parsedUser.email)) {
+             setUser(parsedUser);
+             setIsAuthenticated(true);
+          } else {
+             console.warn('Refreshing Auth: session data invalid');
+             clearAuth();
+          }
+        } else if (token) {
+          console.warn('Refreshing Auth: token found but user profile missing');
+          clearAuth();
         }
-      } catch (e) {
-        console.error('Failed to parse stored user, clearing session', e);
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('user');
+      } catch (err) {
+        console.error('CRITICAL: Failed to initialize auth session', err);
+        clearAuth();
+      } finally {
+        setIsLoading(false);
       }
-    } else if (token) {
-        // We have a token but no user object - this happens after previous bugs
-        // In a real app we'd fetch the profile here. For now, clear to be safe
-        console.warn('Token found but no user object, clearing session');
-        localStorage.removeItem('access_token');
-    }
-    setIsLoading(false);
+    };
+
+    checkSession();
   }, []);
+
+  const clearAuth = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setIsAuthenticated(false);
+  };
 
   const login = async (email: string, password: string) => {
     try {
-      const data = await apiService.post<{ access_token: string; user: User }>('/api/v1/auth/login', {
+      // Clear any existing broken state before login
+      clearAuth();
+      
+      const response = await apiService.post<{ access_token: string; user: User }>('/api/v1/auth/login', {
         email,
         password,
       });
 
-      if (!data.user) {
-        throw new Error('Server response missing user object');
+      if (!response.access_token || !response.user) {
+        throw new Error('Server response missing required authentication data');
       }
 
-      // Store the token and user
-      localStorage.setItem('access_token', data.access_token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      // Important: set storage BEFORE state to ensure redirects pick it up
+      localStorage.setItem('access_token', response.access_token);
+      localStorage.setItem('user', JSON.stringify(response.user));
 
-      setUser(data.user);
+      setUser(response.user);
       setIsAuthenticated(true);
+      console.log('User signed in successfully:', response.user.email);
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        throw new Error(error.message || 'Login failed');
-      }
-      throw new Error('Login failed');
+      console.error('Login action failed:', error);
+      throw error;
     }
   };
 
   const signup = async (email: string, password: string) => {
     try {
-      const data = await apiService.post<{ access_token: string; user: User }>('/api/v1/auth/register', {
+      clearAuth();
+      
+      const response = await apiService.post<{ access_token: string; user: User }>('/api/v1/auth/register', {
         email,
         password,
       });
 
-      if (!data.user) {
-         throw new Error('Server response missing user object');
+      if (!response.access_token || !response.user) {
+        throw new Error('Server response missing required registration data');
       }
 
-      // Store the token and user
-      localStorage.setItem('access_token', data.access_token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('access_token', response.access_token);
+      localStorage.setItem('user', JSON.stringify(response.user));
 
-      setUser(data.user);
+      setUser(response.user);
       setIsAuthenticated(true);
+      console.log('User registered successfully:', response.user.email);
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        throw new Error(error.message || 'Registration failed');
-      }
-      throw new Error('Registration failed');
+      console.error('Signup action failed:', error);
+      throw error;
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user');
-    setUser(null);
-    setIsAuthenticated(false);
+    clearAuth();
+    if (typeof window !== 'undefined') {
+      window.location.href = '/auth/sign-in';
+    }
   };
 
   return (

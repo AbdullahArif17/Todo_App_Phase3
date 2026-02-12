@@ -11,13 +11,13 @@ from jose import JWTError
 
 router = APIRouter()
 
-@router.post("/register", response_model=UserResponse)
+@router.post("/register")
 def register(
     user_data: UserCreate,
     db_session: Session = Depends(get_db_session)
-):
+) -> Dict[str, Any]:
     """
-    Register a new user
+    Register a new user and return an access token
     """
     try:
         # Check if user already exists
@@ -31,14 +31,21 @@ def register(
         # Register the user
         db_user = AuthService.register_user(user_data, db_session)
 
-        # Create response without sensitive data
-        return UserResponse(
-            id=db_user.id,
-            email=db_user.email,
-            full_name=db_user.full_name,
-            is_active=db_user.is_active,
-            created_at=db_user.created_at
-        )
+        # Create access token so user is automatically logged in
+        access_token = AuthService.create_access_token_for_user(db_user)
+
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": {
+                "id": str(db_user.id),
+                "email": db_user.email,
+                "full_name": db_user.full_name,
+                "created_at": db_user.created_at.isoformat()
+            }
+        }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -50,7 +57,7 @@ def register(
 def login(
     user_credentials: UserLogin,
     db_session: Session = Depends(get_db_session)
-) -> Dict[str, str]:
+) -> Dict[str, Any]:
     """
     Login a user and return an access token
     """
@@ -73,8 +80,12 @@ def login(
     return {
         "access_token": access_token,
         "token_type": "bearer",
-        "user_id": str(user.id),
-        "email": user.email
+        "user": {
+            "id": str(user.id),
+            "email": user.email,
+            "full_name": user.full_name,
+            "created_at": user.created_at.isoformat()
+        }
     }
 
 

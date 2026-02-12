@@ -15,6 +15,7 @@ interface AuthContextType {
   logout: () => void;
   signup: (email: string, password: string) => Promise<void>;
   isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,14 +23,24 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check if user is logged in on initial load
     const token = localStorage.getItem('access_token');
+    const storedUser = localStorage.getItem('user');
+    
     if (token) {
-      // In a real app, you would verify the token with the backend
       setIsAuthenticated(true);
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch (e) {
+          console.error('Failed to parse stored user', e);
+        }
+      }
     }
+    setIsLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -84,12 +95,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem('access_token');
+    localStorage.removeItem('user');
     setUser(null);
     setIsAuthenticated(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, signup, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, login, logout, signup, isAuthenticated, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -11,8 +11,7 @@ class Settings(BaseSettings):
     Application settings for production deployment
     """
     # Database settings
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
-    NEON_DATABASE_URL: str = os.getenv("NEON_DATABASE_URL", "")
+    DATABASE_URL: str = os.getenv("DATABASE_URL") or os.getenv("NEON_DATABASE_URL") or "postgresql://todo_user:todo_password@localhost:5432/todo_db"
 
     # OpenAI settings
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
@@ -47,7 +46,8 @@ class Settings(BaseSettings):
 
     @property
     def allowed_origins_list(self) -> List[str]:
-        return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
+        # Strip whitespace and trailing slashes for exact CORS matching
+        return [origin.strip().rstrip("/") for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
 
     # Rate limiting
     RATE_LIMIT_REQUESTS: int = int(os.getenv("RATE_LIMIT_REQUESTS", "100"))

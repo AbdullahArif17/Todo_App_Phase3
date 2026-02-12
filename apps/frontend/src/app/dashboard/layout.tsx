@@ -7,13 +7,24 @@ import { useAuth } from '@/context/auth-context';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, isLoading } = useAuth();
 
   const isActive = (path: string) => pathname === path;
 
   const handleLogout = () => {
     logout();
   };
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center animate-pulse">
+          <p className="text-lg text-muted-foreground">Verifying session...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Redirect to login if not authenticated
   if (!isAuthenticated || !user) {

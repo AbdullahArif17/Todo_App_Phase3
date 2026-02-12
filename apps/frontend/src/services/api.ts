@@ -4,7 +4,7 @@ class ApiService {
   private timeout: number;
 
   constructor() {
-    let rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:7860';
+    let rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7860';
 
     // Log the raw URL from environment variable for debugging
     if (typeof window !== 'undefined') {

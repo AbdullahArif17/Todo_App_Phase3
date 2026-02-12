@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import chatService from '@/services/chat-service';
 
@@ -11,6 +10,7 @@ const ChatPage = () => {
   const [messages, setMessages] = useState<{id: string, role: string, content: string, timestamp: Date}[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  
   interface SearchResult {
     id: string;
     role: string;
@@ -22,8 +22,7 @@ const ChatPage = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
 
-  const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Load conversation from localStorage if available
@@ -42,12 +41,6 @@ const ChatPage = () => {
       localStorage.setItem(`chat_conversation_${user.id}`, conversationId);
     }
   }, [conversationId, user]);
-
-  useEffect(() => {
-    if (!isAuthenticated || !user) {
-      router.push('/auth/sign-in');
-    }
-  }, [isAuthenticated, user, router]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -135,123 +128,137 @@ const ChatPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">AI Todo Assistant</h1>
+    <div className="max-w-4xl mx-auto py-2">
+      <h1 className="text-3xl font-bold text-foreground mb-6">AI Todo Assistant</h1>
 
-        {/* Search bar */}
-        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-          <form onSubmit={handleSearch} className="flex gap-2">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search conversations..."
-              className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              type="submit"
-              disabled={isSearching || !searchQuery.trim()}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed"
-            >
-              {isSearching ? 'Searching...' : 'Search'}
-            </button>
-            {showSearchResults && (
-              <button
-                type="button"
-                onClick={clearSearch}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
-              >
-                Clear
-              </button>
-            )}
-          </form>
-
-          {/* Search results */}
+      {/* Search bar */}
+      <div className="bg-card border border-border rounded-lg shadow-sm p-4 mb-6 transition-all hover:shadow-md">
+        <form onSubmit={handleSearch} className="flex gap-2">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search in past conversations..."
+            className="flex-1 border border-input rounded-lg px-4 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+          />
+          <button
+            type="submit"
+            disabled={isSearching || !searchQuery.trim()}
+            className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 transition-colors"
+          >
+            {isSearching ? 'Search...' : 'Search'}
+          </button>
           {showSearchResults && (
-            <div className="mt-4">
-              <h3 className="font-medium text-gray-700 mb-2">Search Results:</h3>
-              {searchResults.length > 0 ? (
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {searchResults.map((result) => (
-                    <div key={result.id} className="p-2 bg-gray-100 rounded border">
-                      <div className="text-sm font-medium text-gray-900">{result.role}: {result.content.substring(0, 60)}...</div>
-                      <div className="text-xs text-gray-500">{new Date(result.timestamp).toLocaleString()}</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-gray-500 text-sm">No results found for &quot;{searchQuery}&quot;</div>
-              )}
-            </div>
+            <button
+              type="button"
+              onClick={clearSearch}
+              className="bg-muted text-muted-foreground px-4 py-2 rounded-lg hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-primary transition-colors"
+            >
+              Clear
+            </button>
           )}
-        </div>
+        </form>
 
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-800">
-              {conversationId ? `Conversation: ${conversationId.substring(0, 8)}...` : 'New Conversation'}
-            </h2>
-          </div>
-
-          {/* Messages container */}
-          <div className="border border-gray-200 rounded-lg h-96 overflow-y-auto p-4 mb-4 bg-gray-50">
-            {messages.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-gray-500">
-                <p>Start a conversation with the AI assistant to manage your todos!</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                        msg.role === 'user'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-200 text-gray-800'
-                      }`}
-                    >
-                      <div className="whitespace-pre-wrap">{msg.content}</div>
-                      <div className={`text-xs mt-1 ${msg.role === 'user' ? 'text-blue-100' : 'text-gray-500'}`}>
-                        {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                    </div>
+        {/* Search results */}
+        {showSearchResults && (
+          <div className="mt-4 border-t border-border pt-4 animate-in fade-in slide-in-from-top-2">
+            <h3 className="font-medium text-foreground mb-3">Found Messages:</h3>
+            {searchResults.length > 0 ? (
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-2 custom-scrollbar">
+                {searchResults.map((result) => (
+                  <div key={result.id} className="p-3 bg-muted/30 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer">
+                    <div className="text-sm font-medium text-foreground capitalize mb-1">{result.role}</div>
+                    <div className="text-sm text-muted-foreground line-clamp-2 italic">&ldquo;{result.content}&rdquo;</div>
+                    <div className="text-[10px] text-muted-foreground mt-2 text-right">{new Date(result.timestamp).toLocaleString()}</div>
                   </div>
                 ))}
-                <div ref={messagesEndRef} />
               </div>
+            ) : (
+              <div className="text-muted-foreground text-sm italic py-4 text-center">No results matched your query.</div>
             )}
           </div>
+        )}
+      </div>
 
-          {/* Input form */}
-          <form onSubmit={handleSubmit} className="flex gap-2">
-            <input
-              type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type your message here..."
-              disabled={isLoading}
-              className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-            />
-            <button
-              type="submit"
-              disabled={isLoading || !message.trim()}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed"
-            >
-              {isLoading ? 'Sending...' : 'Send'}
-            </button>
-          </form>
+      <div className="bg-card border border-border rounded-lg shadow-sm p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-foreground flex items-center">
+            <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
+            {conversationId ? `Chat Session: ...${conversationId.substring(conversationId.length - 8)}` : 'New Chat Session'}
+          </h2>
+        </div>
 
-          {isLoading && (
-            <div className="mt-2 text-sm text-gray-500 flex items-center">
-              <span className="mr-2">AI is thinking...</span>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+        {/* Messages container */}
+        <div className="border border-border rounded-lg h-[500px] overflow-y-auto p-4 mb-6 bg-muted/10 custom-scrollbar flex flex-col">
+          {messages.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-foreground mb-2">How can I help you today?</h3>
+              <p className="text-sm text-muted-foreground max-w-sm">
+                You can ask me to create todos, list your tasks, or mark things as complete. 
+                Try saying: &ldquo;Remind me to buy groceries tomorrow&rdquo;
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[85%] px-4 py-3 rounded-2xl shadow-sm ${
+                      msg.role === 'user'
+                        ? 'bg-primary text-primary-foreground rounded-tr-none'
+                        : 'bg-card text-foreground border border-border rounded-tl-none'
+                    }`}
+                  >
+                    <div className="whitespace-pre-wrap text-sm leading-relaxed">{msg.content}</div>
+                    <div className={`text-[10px] mt-2 opacity-70 ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
+                      {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
             </div>
           )}
         </div>
+
+        {/* Input form */}
+        <form onSubmit={handleSubmit} className="relative">
+          <input
+            type="text"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Talk to your tasks..."
+            disabled={isLoading}
+            className="w-full border border-input rounded-xl pl-4 pr-14 py-3 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all disabled:opacity-50"
+          />
+          <button
+            type="submit"
+            disabled={isLoading || !message.trim()}
+            className="absolute right-2 top-1.5 p-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 focus:outline-none disabled:opacity-50 transition-colors"
+          >
+            {isLoading ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary-foreground border-t-transparent"></div>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+              </svg>
+            )}
+          </button>
+        </form>
+
+        {isLoading && (
+          <div className="mt-3 text-xs text-muted-foreground flex items-center justify-center animate-pulse">
+            <span>Assistant is thinking...</span>
+          </div>
+        )}
       </div>
     </div>
   );

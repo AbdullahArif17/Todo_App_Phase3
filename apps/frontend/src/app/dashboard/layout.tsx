@@ -1,12 +1,13 @@
 'use client';
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, isAuthenticated, logout, isLoading } = useAuth();
 
   const isActive = (path: string) => pathname === path;
@@ -15,32 +16,20 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     logout();
   };
 
-  // Show loading state while checking authentication
-  if (isLoading) {
+  useEffect(() => {
+    if (!isLoading && (!isAuthenticated || !user)) {
+      router.replace('/auth/sign-in');
+    }
+  }, [isLoading, isAuthenticated, user, router]);
+
+  // Show loading state while checking authentication or redirecting
+  if (isLoading || !isAuthenticated || !user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center animate-pulse">
-          <p className="text-lg text-muted-foreground">Verifying session...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Redirect to login if not authenticated
-  if (!isAuthenticated || !user) {
-    // For now, we'll just render a simple message
-    // In a real implementation, you would use next/router to redirect
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Authentication Required</h1>
-          <p className="text-muted-foreground mb-4">Please sign in to access the dashboard</p>
-          <Link
-            href="/auth/sign-in"
-            className="inline-block px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-          >
-            Sign In
-          </Link>
+          <p className="text-lg text-muted-foreground">
+            {isLoading ? 'Verifying session...' : 'Redirecting...'}
+          </p>
         </div>
       </div>
     );

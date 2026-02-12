@@ -473,57 +473,6 @@ mcp_todo_server = Server(
     version="1.0.0",
     lifespan=lifespan
 )
-        async def add_task_handler(arguments: Dict[str, Any]) -> ToolResult:
-            """Handler for add_task tool."""
-            try:
-                params = AddTaskParams(**arguments)
-
-                # Validate user_id format
-                user_uuid = uuid.UUID(params.user_id)
-
-                # Create task using TodoService
-                with Session(engine) as session:
-                    from apps.backend.src.schemas.todo_task import TodoTaskCreate
-
-                    todo_create = TodoTaskCreate(
-                        title=params.title,
-                        description=params.description or "",
-                        is_completed=False
-                    )
-
-                    created_task = self.todo_service.create_todo(session, user_uuid, todo_create)
-
-                    return CallToolResult(
-                        content=[
-                            TextContent(
-                                type="text",
-                                text=json.dumps({
-                                    "success": True,
-                                    "message": f"Task '{params.title}' created successfully",
-                                    "task": {
-                                        "id": str(created_task.id),
-                                        "title": created_task.title,
-                                        "description": created_task.description,
-                                        "is_completed": created_task.is_completed
-                                    }
-                                })
-                            )
-                        ],
-                        is_error=False
-                    )
-            except Exception as e:
-                return CallToolResult(
-                    content=[
-                        TextContent(
-                            type="text",
-                            text=json.dumps({
-                                "success": False,
-                                "error": str(e)
-                            })
-                        )
-                    ],
-                    is_error=True
-                )
 
         @self.server.tool(
             "list_tasks",

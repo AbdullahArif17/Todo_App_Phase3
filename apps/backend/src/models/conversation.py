@@ -15,6 +15,8 @@ class ConversationBase(SQLModel):
     user_id: uuid.UUID = Field(foreign_key="users.id")
 
 
+from .tag import ConversationTag
+
 class Conversation(ConversationBase, table=True):
     __tablename__ = "conversations"
 
@@ -24,7 +26,6 @@ class Conversation(ConversationBase, table=True):
     messages: list["Message"] = Relationship(back_populates="conversation", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
     # Relationship with tags
-    from .tag import ConversationTag
     tags: list["Tag"] = Relationship(back_populates="conversations", link_model=ConversationTag)
 
     created_at: datetime = Field(default_factory=datetime.utcnow, index=True)  # Add index

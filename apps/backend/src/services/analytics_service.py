@@ -2,8 +2,8 @@ from sqlmodel import Session, select
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
 import uuid
-from apps.backend.src.models.conversation import Conversation
-from apps.backend.src.models.message import Message
+from ..models.conversation import Conversation
+from ..models.message import Message
 
 
 class AnalyticsService:
@@ -148,7 +148,7 @@ class AnalyticsService:
             Dictionary containing platform analytics
         """
         # Get total users (by counting distinct user_ids in conversations)
-        from apps.backend.src.models.user import User
+        from ..models.user import User
         user_statement = select(User).distinct()
         users = session.exec(user_statement).all()
         total_users = len(users)

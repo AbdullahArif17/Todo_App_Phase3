@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     if (token) {
       setIsAuthenticated(true);
-      if (storedUser) {
+      if (storedUser && storedUser !== "undefined") {
         try {
           setUser(JSON.parse(storedUser));
         } catch (e) {
@@ -46,19 +46,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       // Use apiService which handles the base URL configuration
-      const data = await apiService.post<{ access_token: string; user?: User }>('/api/v1/auth/login', {
+      const data = await apiService.post<{ access_token: string; user: User }>('/api/v1/auth/login', {
         email,
         password,
       });
 
-      // Store the token
+      // Store the token and user
       localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('user', JSON.stringify(data.user));
 
-      // Set user data if available in response
-      if (data.user) {
-        setUser(data.user);
-      }
-
+      setUser(data.user);
       setIsAuthenticated(true);
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -71,19 +68,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signup = async (email: string, password: string) => {
     try {
       // Use apiService which handles the base URL configuration
-      const data = await apiService.post<{ access_token: string; user?: User }>('/api/v1/auth/register', {
+      const data = await apiService.post<{ access_token: string; user: User }>('/api/v1/auth/register', {
         email,
         password,
       });
 
-      // Store the token
+      // Store the token and user
       localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('user', JSON.stringify(data.user));
 
-      // Set user data if available in response
-      if (data.user) {
-        setUser(data.user);
-      }
-
+      setUser(data.user);
       setIsAuthenticated(true);
     } catch (error: unknown) {
       if (error instanceof Error) {

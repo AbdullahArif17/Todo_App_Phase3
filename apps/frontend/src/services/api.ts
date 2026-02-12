@@ -26,8 +26,16 @@ class ApiService {
       }
     }
 
-    // Remove trailing slash if present to avoid double slashes when concatenating
-    this.baseURL = rawBaseURL.endsWith('/') ? rawBaseURL.slice(0, -1) : rawBaseURL;
+    // Remove trailing slash if present
+    let processedBaseURL = rawBaseURL.endsWith('/') ? rawBaseURL.slice(0, -1) : rawBaseURL;
+    
+    // If baseURL ends with /api, remove it because our endpoints already start with /api
+    // This handles the case where NEXT_PUBLIC_API_BASE_URL=https://.../api
+    if (processedBaseURL.endsWith('/api')) {
+      processedBaseURL = processedBaseURL.slice(0, -4);
+    }
+    
+    this.baseURL = processedBaseURL;
 
     // Log the final processed URL for debugging (will show in console in both dev and prod)
     if (typeof window !== 'undefined') {
@@ -38,33 +46,18 @@ class ApiService {
   }
 
   private async request(endpoint: string, options: RequestInit = {}): Promise<Response> {
-    // Ensure proper URL construction with proper slash handling
-    // Since backend API routes already include /api in their prefixes, we need to handle this carefully
-    // If the endpoint starts with /api and the baseURL also ends with /api, we need to avoid duplication
-    const normalizedBaseURL = this.baseURL.endsWith('/') ? this.baseURL.slice(0, -1) : this.baseURL;
-
     // Remove leading slash from endpoint for proper concatenation
     const normalizedEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
 
-    // More robust URL construction to avoid /api/api duplication
-    let url: string;
-    const urlObj = new URL(this.baseURL);
-    const basePath = urlObj.pathname.endsWith('/') ? urlObj.pathname.slice(0, -1) : urlObj.pathname;
-    
-    if (basePath.endsWith('/api') && normalizedEndpoint.startsWith('api/')) {
-      // Remove 'api/' from the start of endpoint since it's already in the baseURL
-      const endpointWithoutApi = normalizedEndpoint.substring(4);
-      url = `${this.baseURL}${this.baseURL.endsWith('/') ? '' : '/'}${endpointWithoutApi}`;
-    } else {
-      url = `${this.baseURL}${this.baseURL.endsWith('/') ? '' : '/'}${normalizedEndpoint}`;
-    }
+    // Simple concatenation since baseURL is cleaned up in constructor
+    let url = `${this.baseURL}/${normalizedEndpoint}`;
 
     // Ensure no double slashes (except after http:/https:)
     url = url.replace(/([^:]\/)\/+/g, "$1");
 
-    // Log the constructed URL for debugging in production
+    // Log the constructed URL with a clear label to confirm code is updated
     if (typeof window !== 'undefined') {
-      console.log('Constructed URL:', url);
+      console.log('Final Request URL [v2]:', url);
     }
 
     const config: RequestInit = {

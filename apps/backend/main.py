@@ -11,6 +11,7 @@ from src.database import engine
 from src.api.v1.chat import router as chat_router
 from src.api.v1.conversations import router as conversations_router
 from src.api.v1.auth import router as auth_router
+from src.api.v1.todos import router as todos_router
 from src.core.config import settings
 import logging
 
@@ -65,6 +66,7 @@ app.add_middleware(
 
 # Include API routers
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
+app.include_router(todos_router, prefix="/api/v1/todos", tags=["Todos"])
 app.include_router(chat_router, prefix="/api/v1", tags=["Chat"])
 app.include_router(conversations_router, prefix="/api/v1", tags=["Conversations"])
 

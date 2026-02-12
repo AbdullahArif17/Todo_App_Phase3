@@ -1,13 +1,14 @@
-from mcp.server import Server
-from mcp.types import Tool, CallToolResult, TextContent
-import json
-from contextlib import asynccontextmanager
-
-from pydantic import BaseModel
-from typing import Optional, Dict, Any
 import asyncio
+from contextlib import asynccontextmanager
+from typing import Dict, Any
+import json
 import uuid
 from sqlmodel import Session
+
+from mcp.server import Server
+from mcp.types import Tool, CallToolResult, TextContent
+from pydantic import BaseModel
+from typing import Optional, List
 
 from ..services.todo_service import TodoService
 from ..database import engine
@@ -16,7 +17,7 @@ from ..database import engine
 class AddTaskParams(BaseModel):
     user_id: str
     title: str
-    description: Optional[str] = None
+    description: Optional[str] = ""
 
 
 class ListTasksParams(BaseModel):
@@ -74,11 +75,25 @@ async def lifespan(server: Server):
             params = AddTaskParams(**arguments)
 
             # Validate user_id format
-            user_uuid = uuid.UUID(params.user_id)
+            try:
+                user_uuid = uuid.UUID(params.user_id)
+            except ValueError:
+                return CallToolResult(
+                    content=[
+                        TextContent(
+                            type="text",
+                            text=json.dumps({
+                                "success": False,
+                                "error": "Invalid UUID format for user_id"
+                            })
+                        )
+                    ],
+                    is_error=True
+                )
 
             # Create task using TodoService
             with Session(engine) as session:
-                from ..schemas.todo_task import TodoTaskCreate
+                from ..models.todo_task import TodoTaskCreate
 
                 todo_create = TodoTaskCreate(
                     title=params.title,
@@ -86,7 +101,11 @@ async def lifespan(server: Server):
                     is_completed=False
                 )
 
-                created_task = todo_service.create_todo(session, user_uuid, todo_create)
+                # Create temporary user object
+                from ..models.user import User
+                temp_user = User(id=user_uuid, email="temp@example.com", is_active=True, hashed_password="temp")
+
+                created_task = await todo_service.create_todo(todo_data=todo_create, user=temp_user, db_session=session)
 
                 return CallToolResult(
                     content=[
@@ -141,11 +160,33 @@ async def lifespan(server: Server):
             params = ListTasksParams(**arguments)
 
             # Validate user_id format
-            user_uuid = uuid.UUID(params.user_id)
+            try:
+                user_uuid = uuid.UUID(params.user_id)
+            except ValueError:
+                return CallToolResult(
+                    content=[
+                        TextContent(
+                            type="text",
+                            text=json.dumps({
+                                "success": False,
+                                "error": "Invalid UUID format for user_id"
+                            })
+                        )
+                    ],
+                    is_error=True
+                )
 
             # List tasks using TodoService
             with Session(engine) as session:
-                tasks = todo_service.get_user_todos(user_uuid, params.offset, params.limit, session)
+                from ..models.user import User
+
+                # Create a temporary user object to pass to the service
+                temp_user = User(id=user_uuid, email="temp@example.com", is_active=True, hashed_password="temp")
+
+                tasks = await todo_service.get_user_todos(user=temp_user, db_session=session)
+
+                # Apply limit and offset manually since the service doesn't support it yet
+                limited_tasks = tasks[params.offset:params.offset + params.limit]
 
                 tasks_list = [
                     {
@@ -154,7 +195,7 @@ async def lifespan(server: Server):
                         "description": task.description,
                         "is_completed": task.is_completed
                     }
-                    for task in tasks
+                    for task in limited_tasks
                 ]
 
                 return CallToolResult(
@@ -207,31 +248,32 @@ async def lifespan(server: Server):
             params = UpdateTaskParams(**arguments)
 
             # Validate UUID formats
-            user_uuid = uuid.UUID(params.user_id)
-            task_uuid = uuid.UUID(params.task_id)
+            try:
+                user_uuid = uuid.UUID(params.user_id)
+                task_uuid = uuid.UUID(params.task_id)
+            except ValueError:
+                return CallToolResult(
+                    content=[
+                        TextContent(
+                            type="text",
+                            text=json.dumps({
+                                "success": False,
+                                "error": "Invalid UUID format for user_id or task_id"
+                            })
+                        )
+                    ],
+                    is_error=True
+                )
 
             # Update task using TodoService
             with Session(engine) as session:
-                # First, get the existing task to check ownership
                 from ..models.user import User
-                temp_user = User(id=user_uuid, email="temp@example.com")
-                existing_task = await todo_service.get_todo_by_id(task_uuid, temp_user, session)
-                if not existing_task:
-                    return CallToolResult(
-                        content=[
-                            TextContent(
-                                type="text",
-                                text=json.dumps({
-                                    "success": False,
-                                    "error": "Task not found or does not belong to user"
-                                })
-                            )
-                        ],
-                        is_error=True
-                    )
+                from ..models.todo_task import TodoTaskUpdate
+
+                # Create temporary user object
+                temp_user = User(id=user_uuid, email="temp@example.com", is_active=True, hashed_password="temp")
 
                 # Prepare update data
-                from ..schemas.todo_task import TodoTaskUpdate
                 update_data = {}
                 if params.title is not None:
                     update_data["title"] = params.title
@@ -255,26 +297,45 @@ async def lifespan(server: Server):
                     )
 
                 todo_update = TodoTaskUpdate(**update_data)
-                updated_task = await todo_service.update_todo(task_uuid, todo_update, temp_user, session)
-
-                return CallToolResult(
-                    content=[
-                        TextContent(
-                            type="text",
-                            text=json.dumps({
-                                "success": True,
-                                "message": f"Task '{updated_task.title}' updated successfully",
-                                "task": {
-                                    "id": str(updated_task.id),
-                                    "title": updated_task.title,
-                                    "description": updated_task.description,
-                                    "is_completed": updated_task.is_completed
-                                }
-                            })
-                        )
-                    ],
-                    is_error=False
+                updated_task = await todo_service.update_todo(
+                    todo_id=task_uuid,
+                    todo_update=todo_update,
+                    user=temp_user,
+                    db_session=session
                 )
+
+                if updated_task:
+                    return CallToolResult(
+                        content=[
+                            TextContent(
+                                type="text",
+                                text=json.dumps({
+                                    "success": True,
+                                    "message": f"Task '{updated_task.title}' updated successfully",
+                                    "task": {
+                                        "id": str(updated_task.id),
+                                        "title": updated_task.title,
+                                        "description": updated_task.description,
+                                        "is_completed": updated_task.is_completed
+                                    }
+                                })
+                            )
+                        ],
+                        is_error=False
+                    )
+                else:
+                    return CallToolResult(
+                        content=[
+                            TextContent(
+                                type="text",
+                                text=json.dumps({
+                                    "success": False,
+                                    "error": "Task not found or user not authorized to update"
+                                })
+                            )
+                        ],
+                        is_error=True
+                    )
         except Exception as e:
             return CallToolResult(
                 content=[
@@ -310,51 +371,70 @@ async def lifespan(server: Server):
             params = CompleteTaskParams(**arguments)
 
             # Validate UUID formats
-            user_uuid = uuid.UUID(params.user_id)
-            task_uuid = uuid.UUID(params.task_id)
+            try:
+                user_uuid = uuid.UUID(params.user_id)
+                task_uuid = uuid.UUID(params.task_id)
+            except ValueError:
+                return CallToolResult(
+                    content=[
+                        TextContent(
+                            type="text",
+                            text=json.dumps({
+                                "success": False,
+                                "error": "Invalid UUID format for user_id or task_id"
+                            })
+                        )
+                    ],
+                    is_error=True
+                )
 
             # Update task completion status using TodoService
             with Session(engine) as session:
-                # First, get the existing task to check ownership
                 from ..models.user import User
-                temp_user = User(id=user_uuid, email="temp@example.com")
-                existing_task = await todo_service.get_todo_by_id(task_uuid, temp_user, session)
-                if not existing_task:
+
+                # Create temporary user object
+                temp_user = User(id=user_uuid, email="temp@example.com", is_active=True, hashed_password="temp")
+
+                updated_task = await todo_service.toggle_todo_completion(
+                    todo_id=task_uuid,
+                    is_completed=params.is_completed,
+                    user=temp_user,
+                    db_session=session
+                )
+
+                if updated_task:
+                    status_text = "completed" if params.is_completed else "marked as incomplete"
+                    return CallToolResult(
+                        content=[
+                            TextContent(
+                                type="text",
+                                text=json.dumps({
+                                    "success": True,
+                                    "message": f"Task '{updated_task.title}' has been {status_text}",
+                                    "task": {
+                                        "id": str(updated_task.id),
+                                        "title": updated_task.title,
+                                        "description": updated_task.description,
+                                        "is_completed": updated_task.is_completed
+                                    }
+                                })
+                            )
+                        ],
+                        is_error=False
+                    )
+                else:
                     return CallToolResult(
                         content=[
                             TextContent(
                                 type="text",
                                 text=json.dumps({
                                     "success": False,
-                                    "error": "Task not found or does not belong to user"
+                                    "error": "Task not found or user not authorized to update"
                                 })
                             )
                         ],
                         is_error=True
                     )
-
-                # Update completion status
-                updated_task = await todo_service.toggle_todo_completion(task_uuid, params.is_completed, temp_user, session)
-
-                status_text = "completed" if params.is_completed else "marked as incomplete"
-                return CallToolResult(
-                    content=[
-                        TextContent(
-                            type="text",
-                            text=json.dumps({
-                                "success": True,
-                                "message": f"Task '{updated_task.title}' has been {status_text}",
-                                "task": {
-                                    "id": str(updated_task.id),
-                                    "title": updated_task.title,
-                                    "description": updated_task.description,
-                                    "is_completed": updated_task.is_completed
-                                }
-                            })
-                        )
-                    ],
-                    is_error=False
-                )
         except Exception as e:
             return CallToolResult(
                 content=[
@@ -389,30 +469,35 @@ async def lifespan(server: Server):
             params = DeleteTaskParams(**arguments)
 
             # Validate UUID formats
-            user_uuid = uuid.UUID(params.user_id)
-            task_uuid = uuid.UUID(params.task_id)
+            try:
+                user_uuid = uuid.UUID(params.user_id)
+                task_uuid = uuid.UUID(params.task_id)
+            except ValueError:
+                return CallToolResult(
+                    content=[
+                        TextContent(
+                            type="text",
+                            text=json.dumps({
+                                "success": False,
+                                "error": "Invalid UUID format for user_id or task_id"
+                            })
+                        )
+                    ],
+                    is_error=True
+                )
 
             # Delete task using TodoService
             with Session(engine) as session:
-                # First, verify the task exists and belongs to the user
                 from ..models.user import User
-                temp_user = User(id=user_uuid, email="temp@example.com")
-                existing_task = await todo_service.get_todo_by_id(task_uuid, temp_user, session)
-                if not existing_task:
-                    return CallToolResult(
-                        content=[
-                            TextContent(
-                                type="text",
-                                text=json.dumps({
-                                    "success": False,
-                                    "error": "Task not found or does not belong to user"
-                                })
-                            )
-                        ],
-                        is_error=True
-                    )
 
-                success = await todo_service.delete_todo(task_uuid, temp_user, session)
+                # Create temporary user object
+                temp_user = User(id=user_uuid, email="temp@example.com", is_active=True, hashed_password="temp")
+
+                success = await todo_service.delete_todo(
+                    todo_id=task_uuid,
+                    user=temp_user,
+                    db_session=session
+                )
 
                 if success:
                     return CallToolResult(
@@ -434,7 +519,7 @@ async def lifespan(server: Server):
                                 type="text",
                                 text=json.dumps({
                                     "success": False,
-                                    "error": "Failed to delete task"
+                                    "error": "Task not found or user not authorized to delete"
                                 })
                             )
                         ],

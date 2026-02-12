@@ -101,7 +101,11 @@ async def lifespan(server: Server):
                     is_completed=False
                 )
 
-                created_task = await todo_service.create_todo(todo_data=todo_create, user_id=user_uuid, db_session=session)
+                # Create temporary user object
+                from ..models.user import User
+                temp_user = User(id=user_uuid, email="temp@example.com", is_active=True, hashed_password="temp")
+
+                created_task = await todo_service.create_todo(todo_data=todo_create, user=temp_user, db_session=session)
 
                 return CallToolResult(
                     content=[

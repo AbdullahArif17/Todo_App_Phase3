@@ -30,8 +30,8 @@ export default function SignUpPage() {
       // Use the signup function from AuthContext which handles storage and state
       await signup(email, password);
 
-      // Redirect to dashboard
-      router.push('/dashboard/todos');
+      // Force a full reload and redirect to the dashboard
+      window.location.href = '/dashboard/todos';
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred during registration';
       setError(errorMessage);

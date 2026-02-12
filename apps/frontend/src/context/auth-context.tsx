@@ -26,8 +26,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Initialize auth from localStorage on mount
   useEffect(() => {
-    const checkSession = () => {
+    const initAuth = () => {
       try {
         const token = localStorage.getItem('access_token');
         const storedUser = localStorage.getItem('user');
@@ -37,26 +38,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (parsedUser && (parsedUser.id || parsedUser.email)) {
              setUser(parsedUser);
              setIsAuthenticated(true);
+             console.log('[Auth] Restored session for:', parsedUser.email);
           } else {
-             console.warn('Refreshing Auth: session data invalid');
-             clearAuth();
+             console.warn('[Auth] Token found but user data was invalid/empty');
+             handleLogoutInternal();
           }
         } else if (token) {
-          console.warn('Refreshing Auth: token found but user profile missing');
-          clearAuth();
+          console.warn('[Auth] Token exists but no user profile found in storage');
+          handleLogoutInternal();
+        } else {
+          console.log('[Auth] No existing session found');
         }
       } catch (err) {
-        console.error('CRITICAL: Failed to initialize auth session', err);
-        clearAuth();
+        console.error('[Auth] Error during session initialization:', err);
+        handleLogoutInternal();
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkSession();
+    initAuth();
   }, []);
 
-  const clearAuth = () => {
+  const handleLogoutInternal = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
     setUser(null);
@@ -65,58 +69,69 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      // Clear any existing broken state before login
-      clearAuth();
+      console.log('[Auth] Attempting login for:', email);
       
       const response = await apiService.post<{ access_token: string; user: User }>('/api/v1/auth/login', {
         email,
         password,
       });
 
+      console.log('[Auth] Login response received');
+
       if (!response.access_token || !response.user) {
-        throw new Error('Server response missing required authentication data');
+        console.error('[Auth] Login successful but response structure invalid:', response);
+        throw new Error('Server response missing access_token or user profile');
       }
 
-      // Important: set storage BEFORE state to ensure redirects pick it up
+      // 1. Update Storage
       localStorage.setItem('access_token', response.access_token);
       localStorage.setItem('user', JSON.stringify(response.user));
 
+      // 2. Update React State
       setUser(response.user);
       setIsAuthenticated(true);
-      console.log('User signed in successfully:', response.user.email);
+      
+      console.log('[Auth] Session established for:', response.user.email);
     } catch (error: unknown) {
-      console.error('Login action failed:', error);
+      console.error('[Auth] Login phase failed:', error);
       throw error;
     }
   };
 
   const signup = async (email: string, password: string) => {
     try {
-      clearAuth();
+      console.log('[Auth] Attempting registration for:', email);
       
       const response = await apiService.post<{ access_token: string; user: User }>('/api/v1/auth/register', {
         email,
         password,
       });
 
+      console.log('[Auth] Registration response received');
+
       if (!response.access_token || !response.user) {
-        throw new Error('Server response missing required registration data');
+        console.error('[Auth] Signup successful but response structure invalid:', response);
+        throw new Error('Server response missing access_token or user profile');
       }
 
+      // 1. Update Storage
       localStorage.setItem('access_token', response.access_token);
       localStorage.setItem('user', JSON.stringify(response.user));
 
+      // 2. Update React State
       setUser(response.user);
       setIsAuthenticated(true);
-      console.log('User registered successfully:', response.user.email);
+      
+      console.log('[Auth] Account created and session established for:', response.user.email);
     } catch (error: unknown) {
-      console.error('Signup action failed:', error);
+      console.error('[Auth] Registration phase failed:', error);
       throw error;
     }
   };
 
   const logout = () => {
-    clearAuth();
+    console.log('[Auth] Logging out user');
+    handleLogoutInternal();
     if (typeof window !== 'undefined') {
       window.location.href = '/auth/sign-in';
     }

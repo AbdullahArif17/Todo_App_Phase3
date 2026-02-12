@@ -23,8 +23,9 @@ export default function SignInPage() {
       // Use the login function from AuthContext which handles storage and state
       await login(email, password);
 
-      // Redirect to dashboard
-      router.push('/dashboard/todos');
+      // Force a full reload and redirect to the dashboard
+      // This is more robust than router.push for ensuring Auth state is fresh on the new page
+      window.location.href = '/dashboard/todos';
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred during login';
       setError(errorMessage);

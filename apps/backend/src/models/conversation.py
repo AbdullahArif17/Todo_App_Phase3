@@ -23,6 +23,10 @@ class Conversation(ConversationBase, table=True):
     user: "User" = Relationship(back_populates="conversations")
     messages: list["Message"] = Relationship(back_populates="conversation", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
+    # Relationship with tags
+    from .tag import ConversationTag
+    tags: list["Tag"] = Relationship(back_populates="conversations", link_model=ConversationTag)
+
     created_at: datetime = Field(default_factory=datetime.utcnow, index=True)  # Add index
     updated_at: datetime = Field(default_factory=datetime.utcnow, index=True)  # Add index
 

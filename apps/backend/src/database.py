@@ -9,7 +9,7 @@ from .models.conversation import Conversation
 from .models.message import Message
 from .models.todo_task import TodoTask
 from .models.template import Template
-from .models.tag import Tag
+from .models.tag import Tag, ConversationTag
 
 # Configure logging
 logger = logging.getLogger(__name__)

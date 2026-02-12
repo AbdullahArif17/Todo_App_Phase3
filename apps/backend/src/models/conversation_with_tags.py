@@ -2,19 +2,18 @@ from sqlmodel import SQLModel, Field, Relationship
 from typing import TYPE_CHECKING, Optional, List
 from datetime import datetime
 import uuid
-from sqlalchemy import Index, Column, Table, ForeignKey
+from sqlalchemy import Index
 
 if TYPE_CHECKING:
     from apps.backend.src.models.user import User
     from apps.backend.src.models.message import Message
-    from apps.backend.src.models.tag import Tag
+    from apps.backend.src.models.tag import Tag, ConversationTag
 
-# Association table for many-to-many relationship between Conversation and Tag (defined here to avoid circular imports)
-conversation_tag = Table(
-    "conversation_tags",
-    Column("conversation_id", uuid.UUID, ForeignKey("conversations.id")),
-    Column("tag_id", uuid.UUID, ForeignKey("tags.id")),
-)
+# Using ConversationTag from tag.py would be better, but if we must define it here:
+class ConversationTag(SQLModel, table=True):
+    __tablename__ = "conversation_tags"
+    conversation_id: uuid.UUID = Field(foreign_key="conversations.id", primary_key=True)
+    tag_id: uuid.UUID = Field(foreign_key="tags.id", primary_key=True)
 
 
 class ConversationBase(SQLModel):
@@ -46,7 +45,7 @@ class Conversation(ConversationBase, table=True):
     # Relationship to tags
     tags: List["Tag"] = Relationship(
         back_populates="conversations",
-        link_model=conversation_tag
+        link_model=ConversationTag
     )
 
     # Add table-level indexes

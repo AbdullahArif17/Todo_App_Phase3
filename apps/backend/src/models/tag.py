@@ -1,19 +1,16 @@
 from sqlmodel import SQLModel, Field, Relationship
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List, Optional
 from datetime import datetime
 import uuid
-from sqlalchemy import Column, Table, ForeignKey
 
 if TYPE_CHECKING:
-    from apps.backend.src.models.conversation import Conversation
+    from .conversation import Conversation
 
 
-# Association table for many-to-many relationship between Conversation and Tag
-conversation_tag = Table(
-    "conversation_tags",
-    Column("conversation_id", uuid.UUID, ForeignKey("conversations.id")),
-    Column("tag_id", uuid.UUID, ForeignKey("tags.id"))
-)
+class ConversationTag(SQLModel, table=True):
+    __tablename__ = "conversation_tags"
+    conversation_id: uuid.UUID = Field(foreign_key="conversations.id", primary_key=True)
+    tag_id: uuid.UUID = Field(foreign_key="tags.id", primary_key=True)
 
 
 class TagBase(SQLModel):
@@ -32,7 +29,7 @@ class Tag(TagBase, table=True):
     # Relationship to conversations
     conversations: List["Conversation"] = Relationship(
         back_populates="tags",
-        link_model=conversation_tag
+        link_model=ConversationTag
     )
 
 

@@ -1,7 +1,7 @@
 import uuid
 from typing import List, Dict, Any
-from apps.backend.src.models.message import Message
-from apps.backend.src.models.conversation import Conversation
+from ..models.message import Message
+from ..models.conversation import Conversation
 
 
 def format_conversation_for_ai(messages: List[Message], max_history: int = 20) -> List[Dict[str, str]]:

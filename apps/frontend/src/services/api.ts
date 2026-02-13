@@ -4,7 +4,28 @@ class ApiService {
   private timeout: number;
 
   constructor() {
-    const rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7860';
+    // Determine the base URL based on the current environment
+    let rawBaseURL = '';
+
+    if (typeof window !== 'undefined') {
+      // Client-side execution
+      const hostname = window.location.hostname;
+
+      // For production deployments, use the same origin as the frontend to avoid CORS issues
+      if (hostname !== 'localhost' && !hostname.includes('127.0.0.1') && !hostname.includes('vercel.app')) {
+        // For production domains (not localhost or Vercel preview), use environment variable
+        rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7860';
+      } else if (hostname.includes('vercel.app')) {
+        // For Vercel deployments, use the same origin as the current page
+        rawBaseURL = window.location.origin;
+      } else {
+        // For localhost, use environment variable or default
+        rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7860';
+      }
+    } else {
+      // Server-side execution (build time)
+      rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7860';
+    }
 
     if (typeof window !== 'undefined') {
       console.log('[API] Environment variable URL:', rawBaseURL);
@@ -48,12 +69,21 @@ class ApiService {
   private async request(endpoint: string, options: RequestInit = {}): Promise<Response> {
     // Ensure endpoint has a leading slash
     const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    
+
     // Construct final URL
     let url = `${this.baseURL}${path}`;
-    
+
     // Clean double slashes (except in protocol)
     url = url.replace(/([^:]\/)\/+/g, "$1");
+
+    // Ensure HTTPS for production environments (not localhost)
+    if (typeof window !== 'undefined' &&
+        window.location.hostname !== 'localhost' &&
+        !window.location.hostname.includes('127.0.0.1')) {
+      if (url.startsWith('http://')) {
+        url = url.replace('http://', 'https://');
+      }
+    }
 
     if (typeof window !== 'undefined') {
       console.log(`[API Request] ${options.method || 'GET'} ${url}`);

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import apiService from '../../../services/api';
+import { useAuth } from '@/context/auth-context';
 
 export default function SignInPage() {
   const [email, setEmail] = useState('');
@@ -11,6 +11,7 @@ export default function SignInPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,14 +20,8 @@ export default function SignInPage() {
     setLoading(true);
 
     try {
-      // Use apiService which handles the base URL configuration
-      const data = await apiService.post<{ access_token: string }>('/api/v1/auth/login', {
-        email,
-        password,
-      });
-
-      // Store the token in localStorage or cookies
-      localStorage.setItem('access_token', data.access_token);
+      // Use the login function from AuthContext which handles storage and state
+      await login(email, password);
 
       // Redirect to dashboard
       router.push('/dashboard/todos');

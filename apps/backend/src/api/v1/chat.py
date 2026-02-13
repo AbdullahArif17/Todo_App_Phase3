@@ -75,10 +75,6 @@ async def chat_endpoint(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to access this user's chat"
         )
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not authorized to access this user's chat"
-        )
 
     # Validate message content
     if not chat_request.message or not chat_request.message.strip():

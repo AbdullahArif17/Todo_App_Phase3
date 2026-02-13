@@ -11,19 +11,15 @@ class ApiService {
       // Client-side execution
       const hostname = window.location.hostname;
 
-      // Check for various deployment environments
-      if (hostname.includes('huggingface')) {
-        // For Hugging Face Spaces deployment, use the same origin
-        rawBaseURL = window.location.origin;
-      } else if (hostname.includes('vercel.app')) {
-        // For Vercel deployments, use the same origin as the current page
-        rawBaseURL = window.location.origin;
-      } else if (hostname === 'localhost' || hostname.includes('127.0.0.1')) {
+      // For production environments (both Vercel and other domains), use the backend from environment variables
+      // This ensures that the frontend connects to the correct backend regardless of where it's deployed
+      if (hostname === 'localhost' || hostname.includes('127.0.0.1')) {
         // For localhost, use environment variable or default
         rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7860';
       } else {
-        // For other production domains, use environment variable
-        rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || window.location.origin;
+        // For all production environments, use the backend API from environment variables
+        // This ensures connection to the Hugging Face Spaces backend
+        rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'https://abdullah017-todoapp-phase3.hf.space';
       }
     } else {
       // Server-side execution (build time)

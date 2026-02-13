@@ -75,10 +75,15 @@ class ApiService {
     // Clean double slashes (except in protocol)
     url = url.replace(/([^:]\/)\/+/g, "$1");
 
-    // Ensure HTTPS for production environments (not localhost)
+    // Ensure HTTPS for all requests (not localhost)
     if (typeof window !== 'undefined' &&
         window.location.hostname !== 'localhost' &&
         !window.location.hostname.includes('127.0.0.1')) {
+      if (url.startsWith('http://')) {
+        url = url.replace('http://', 'https://');
+      }
+    } else if (typeof window === 'undefined') {
+      // Server-side: also ensure HTTPS for production
       if (url.startsWith('http://')) {
         url = url.replace('http://', 'https://');
       }

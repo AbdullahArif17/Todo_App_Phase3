@@ -4,7 +4,7 @@ class ApiService {
   private timeout: number;
 
   constructor() {
-    const rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7860';
+    let rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7860';
 
     if (typeof window !== 'undefined') {
       console.log('[API] Environment variable URL:', rawBaseURL);
@@ -22,12 +22,17 @@ class ApiService {
       processed = processed.slice(0, -4);
     }
 
-    // Enforce HTTPS if not on localhost
-    if (typeof window !== 'undefined' && 
-        window.location.hostname !== 'localhost' && 
+    // For production environments (not localhost), ensure HTTPS
+    if (typeof window !== 'undefined' &&
+        window.location.hostname !== 'localhost' &&
         !window.location.hostname.includes('127.0.0.1')) {
+      // If the processed URL starts with http://, convert to https://
       if (processed.startsWith('http://')) {
         processed = processed.replace('http://', 'https://');
+      }
+      // If it doesn't start with a protocol, assume HTTPS for production
+      if (!processed.startsWith('http://') && !processed.startsWith('https://')) {
+        processed = 'https://' + processed;
       }
     }
 

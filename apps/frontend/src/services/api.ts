@@ -11,16 +11,19 @@ class ApiService {
       // Client-side execution
       const hostname = window.location.hostname;
 
-      // For production deployments, use the same origin as the frontend to avoid CORS issues
-      if (hostname !== 'localhost' && !hostname.includes('127.0.0.1') && !hostname.includes('vercel.app')) {
-        // For production domains (not localhost or Vercel preview), use environment variable
-        rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7860';
+      // Check for various deployment environments
+      if (hostname.includes('huggingface')) {
+        // For Hugging Face Spaces deployment, use the same origin
+        rawBaseURL = window.location.origin;
       } else if (hostname.includes('vercel.app')) {
         // For Vercel deployments, use the same origin as the current page
         rawBaseURL = window.location.origin;
-      } else {
+      } else if (hostname === 'localhost' || hostname.includes('127.0.0.1')) {
         // For localhost, use environment variable or default
         rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7860';
+      } else {
+        // For other production domains, use environment variable
+        rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_BACKEND_URL || window.location.origin;
       }
     } else {
       // Server-side execution (build time)

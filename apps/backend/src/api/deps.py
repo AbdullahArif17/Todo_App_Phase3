@@ -9,6 +9,8 @@ from uuid import UUID
 
 security = HTTPBearer()
 
+from src.database import engine
+
 def get_db_session():
     """
     Dependency to get a database session

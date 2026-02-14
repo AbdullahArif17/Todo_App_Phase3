@@ -55,6 +55,7 @@ engine = create_db_engine()
 
 from contextlib import contextmanager
 from typing import Generator
+from sqlmodel import Session
 
 @contextmanager
 def get_session() -> Generator[Session, None, None]:

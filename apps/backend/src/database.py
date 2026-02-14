@@ -53,14 +53,7 @@ def create_db_engine():
 # Create the global engine instance
 engine = create_db_engine()
 
-from contextlib import contextmanager
-from typing import Generator
-from sqlmodel import Session
-
-from sqlmodel import Session
-from typing import Generator
-
-def get_session() -> Generator[Session, None, None]:
+def get_session():
     """
     Dependency to get a database session
     """

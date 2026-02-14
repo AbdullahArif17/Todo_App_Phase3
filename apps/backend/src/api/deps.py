@@ -9,11 +9,11 @@ from uuid import UUID
 
 security = HTTPBearer()
 
-def get_db_session() -> Generator[Session, None, None]:
+def get_db_session():
     """
     Dependency to get a database session
     """
-    with get_session() as session:
+    with Session(engine) as session:
         yield session
 
 async def get_current_user(

@@ -57,13 +57,12 @@ from contextlib import contextmanager
 from typing import Generator
 from sqlmodel import Session
 
-@contextmanager
+from sqlmodel import Session
+from typing import Generator
+
 def get_session() -> Generator[Session, None, None]:
     """
-    Context manager that provides a database session
+    Dependency to get a database session
     """
-    session = Session(engine)
-    try:
+    with Session(engine) as session:
         yield session
-    finally:
-        session.close()

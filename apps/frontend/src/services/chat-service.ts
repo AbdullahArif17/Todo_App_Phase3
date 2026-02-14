@@ -61,7 +61,7 @@ class ChatService {
       // Use the main API service instead of direct fetch to ensure proper URL handling
       const response = await apiService.get<Message[]>(`/api/v1/conversations/${userId}/conversations/${conversationId}/messages?skip=${skip}&limit=${limit}`);
 
-      return response.messages || response;
+      return response;
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
       throw new Error(errorMessage || 'Failed to fetch messages');
@@ -106,7 +106,7 @@ class ChatService {
       // Use the main API service instead of direct fetch to ensure proper URL handling
       const response = await apiService.get<Message[]>(`/api/v1/conversations/${userId}/conversations/${conversationId}/messages?skip=${skip}&limit=${limit}`);
 
-      return response.messages || response;
+      return response;
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
       throw new Error(errorMessage || 'Failed to fetch conversation messages');

@@ -28,6 +28,8 @@ export interface Message {
   updated_at: string;
 }
 
+import apiService from './api';
+
 export interface SearchResultsResponse {
   query: string;
   conversations: Conversation[];
@@ -41,25 +43,13 @@ export interface SearchResultsResponse {
 class ChatService {
   async sendMessage(userId: string, message: string, conversationId?: string): Promise<ChatResponse> {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7860'}/api/${userId}/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          message,
-          conversation_id: conversationId
-        })
+      // Use the main API service instead of direct fetch to ensure proper URL handling
+      const response = await apiService.post<ChatResponse>(`/api/v1/chat/${userId}`, {
+        message,
+        conversation_id: conversationId
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-      }
-
-      return response.json();
+      return response;
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
       throw new Error(errorMessage || 'Failed to send chat message');
@@ -68,21 +58,10 @@ class ChatService {
 
   async getMessages(userId: string, conversationId: string, skip: number = 0, limit: number = 50): Promise<Message[]> {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7860'}/api/${userId}/conversations/${conversationId}/messages?skip=${skip}&limit=${limit}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        }
-      });
+      // Use the main API service instead of direct fetch to ensure proper URL handling
+      const response = await apiService.get<Message[]>(`/api/v1/conversations/${userId}/conversations/${conversationId}/messages?skip=${skip}&limit=${limit}`);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.messages || data;
+      return response.messages || response;
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
       throw new Error(errorMessage || 'Failed to fetch messages');
@@ -91,20 +70,10 @@ class ChatService {
 
   async getConversations(userId: string, skip: number = 0, limit: number = 20): Promise<Conversation[]> {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7860'}/api/${userId}/conversations?skip=${skip}&limit=${limit}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        }
-      });
+      // Use the main API service instead of direct fetch to ensure proper URL handling
+      const response = await apiService.get<Conversation[]>(`/api/v1/conversations/${userId}?skip=${skip}&limit=${limit}`);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-      }
-
-      return response.json();
+      return response;
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
       throw new Error(errorMessage || 'Failed to fetch conversations');
@@ -113,30 +82,18 @@ class ChatService {
 
   async searchConversations(userId: string, query: string, limit: number = 20, offset: number = 0): Promise<SearchResultsResponse> {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7860'}/api/${userId}/search?query=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        }
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
+      // Use the main API service instead of direct fetch to ensure proper URL handling
+      const response = await apiService.get<SearchResultsResponse>(`/api/v1/search/${userId}?query=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`);
 
       // Return properly structured result
       return {
-        query: result.query || query,
-        conversations: result.conversations || [],
-        messages: result.messages || [],
-        total_conversation_results: result.total_conversation_results || 0,
-        total_message_results: result.total_message_results || 0,
-        limit: result.limit || limit,
-        offset: result.offset || offset
+        query: response.query || query,
+        conversations: response.conversations || [],
+        messages: response.messages || [],
+        total_conversation_results: response.total_conversation_results || 0,
+        total_message_results: response.total_message_results || 0,
+        limit: response.limit || limit,
+        offset: response.offset || offset
       };
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
@@ -146,21 +103,10 @@ class ChatService {
 
   async getConversationMessages(conversationId: string, userId: string, skip: number = 0, limit: number = 50): Promise<Message[]> {
     try {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7860'}/api/${userId}/conversations/${conversationId}/messages?skip=${skip}&limit=${limit}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        }
-      });
+      // Use the main API service instead of direct fetch to ensure proper URL handling
+      const response = await apiService.get<Message[]>(`/api/v1/conversations/${userId}/conversations/${conversationId}/messages?skip=${skip}&limit=${limit}`);
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.messages || data;
+      return response.messages || response;
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
       throw new Error(errorMessage || 'Failed to fetch conversation messages');

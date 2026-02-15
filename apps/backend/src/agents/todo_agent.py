@@ -30,13 +30,14 @@ class TodoAgent:
         self.max_tokens = settings.AI_MAX_TOKENS
         print(f"DEBUG: TodoAgent initialized with provider: {settings.AI_PROVIDER}, model: {self.model}")
 
-    async def process_message_with_context(self, user_input: str, conversation_history: List[Dict[str, str]], session: Session = None) -> str:
+    async def process_message_with_context(self, user_input: str, conversation_history: List[Dict[str, str]], user_id: str, session: Session = None) -> str:
         """
         Process user input with conversation history and return AI-generated response.
 
         Args:
             user_input: The user's message
             conversation_history: List of previous messages in the conversation
+            user_id: The ID of the authenticated user
             session: Database session for tool operations
 
         Returns:
@@ -69,6 +70,85 @@ class TodoAgent:
         })
 
         try:
+            # Define tools once
+            tools = [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "add_task",
+                        "description": "Add a new task. Requires a title.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "title": {"type": "string", "description": "The title of the task to create"},
+                                "description": {"type": "string", "description": "Optional description of the task"}
+                            },
+                            "required": ["title"]
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "list_tasks",
+                        "description": "List all tasks for the current user.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "limit": {"type": "integer", "description": "Maximum number of tasks to return (default: 10)"},
+                                "offset": {"type": "integer", "description": "Number of tasks to skip (default: 0)"}
+                            }
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "update_task",
+                        "description": "Update an existing task. Requires task_id.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "task_id": {"type": "string", "description": "The ID of the task to update"},
+                                "title": {"type": "string", "description": "New title for the task (optional)"},
+                                "description": {"type": "string", "description": "New description for the task (optional)"},
+                                "is_completed": {"type": "boolean", "description": "New completion status for the task (optional)"}
+                            },
+                            "required": ["task_id"]
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "complete_task",
+                        "description": "Mark a task as complete or incomplete. Requires task_id.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "task_id": {"type": "string", "description": "The ID of the task to update"},
+                                "is_completed": {"type": "boolean", "description": "Whether the task is completed (default: true)"}
+                            },
+                            "required": ["task_id"]
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "delete_task",
+                        "description": "Delete a task. Requires task_id.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "task_id": {"type": "string", "description": "The ID of the task to delete"}
+                            },
+                            "required": ["task_id"]
+                        }
+                    }
+                }
+            ]
+
             # Call the appropriate API based on provider
             if settings.AI_PROVIDER.lower() == "groq":
                 # Use Groq API
@@ -77,89 +157,7 @@ class TodoAgent:
                     model=self.model,
                     temperature=self.temperature,
                     max_tokens=self.max_tokens,
-                    tools=[
-                        {
-                            "type": "function",
-                            "function": {
-                                "name": "add_task",
-                                "description": "Add a new task for a user. Requires user_id and title.",
-                                "parameters": {
-                                    "type": "object",
-                                    "properties": {
-                                        "user_id": {"type": "string", "description": "The ID of the user creating the task"},
-                                        "title": {"type": "string", "description": "The title of the task to create"},
-                                        "description": {"type": "string", "description": "Optional description of the task"}
-                                    },
-                                    "required": ["user_id", "title"]
-                                }
-                            }
-                        },
-                        {
-                            "type": "function",
-                            "function": {
-                                "name": "list_tasks",
-                                "description": "List tasks for a user. Requires user_id.",
-                                "parameters": {
-                                    "type": "object",
-                                    "properties": {
-                                        "user_id": {"type": "string", "description": "The ID of the user whose tasks to list"},
-                                        "limit": {"type": "integer", "description": "Maximum number of tasks to return (default: 10)"},
-                                        "offset": {"type": "integer", "description": "Number of tasks to skip (default: 0)"}
-                                    },
-                                    "required": ["user_id"]
-                                }
-                            }
-                        },
-                        {
-                            "type": "function",
-                            "function": {
-                                "name": "update_task",
-                                "description": "Update an existing task for a user. Requires user_id and task_id.",
-                                "parameters": {
-                                    "type": "object",
-                                    "properties": {
-                                        "user_id": {"type": "string", "description": "The ID of the user"},
-                                        "task_id": {"type": "string", "description": "The ID of the task to update"},
-                                        "title": {"type": "string", "description": "New title for the task (optional)"},
-                                        "description": {"type": "string", "description": "New description for the task (optional)"},
-                                        "is_completed": {"type": "boolean", "description": "New completion status for the task (optional)"}
-                                    },
-                                    "required": ["user_id", "task_id"]
-                                }
-                            }
-                        },
-                        {
-                            "type": "function",
-                            "function": {
-                                "name": "complete_task",
-                                "description": "Mark a task as complete or incomplete for a user. Requires user_id and task_id.",
-                                "parameters": {
-                                    "type": "object",
-                                    "properties": {
-                                        "user_id": {"type": "string", "description": "The ID of the user"},
-                                        "task_id": {"type": "string", "description": "The ID of the task to update"},
-                                        "is_completed": {"type": "boolean", "description": "Whether the task is completed (default: true)"}
-                                    },
-                                    "required": ["user_id", "task_id"]
-                                }
-                            }
-                        },
-                        {
-                            "type": "function",
-                            "function": {
-                                "name": "delete_task",
-                                "description": "Delete a task for a user. Requires user_id and task_id.",
-                                "parameters": {
-                                    "type": "object",
-                                    "properties": {
-                                        "user_id": {"type": "string", "description": "The ID of the user"},
-                                        "task_id": {"type": "string", "description": "The ID of the task to delete"}
-                                    },
-                                    "required": ["user_id", "task_id"]
-                                }
-                            }
-                        }
-                    ],
+                    tools=tools,
                     tool_choice="auto"
                 )
             else:
@@ -172,89 +170,7 @@ class TodoAgent:
                     model=self.model,
                     temperature=self.temperature,
                     max_tokens=self.max_tokens,
-                    tools=[
-                        {
-                            "type": "function",
-                            "function": {
-                                "name": "add_task",
-                                "description": "Add a new task for a user. Requires user_id and title.",
-                                "parameters": {
-                                    "type": "object",
-                                    "properties": {
-                                        "user_id": {"type": "string", "description": "The ID of the user creating the task"},
-                                        "title": {"type": "string", "description": "The title of the task to create"},
-                                        "description": {"type": "string", "description": "Optional description of the task"}
-                                    },
-                                    "required": ["user_id", "title"]
-                                }
-                            }
-                        },
-                        {
-                            "type": "function",
-                            "function": {
-                                "name": "list_tasks",
-                                "description": "List tasks for a user. Requires user_id.",
-                                "parameters": {
-                                    "type": "object",
-                                    "properties": {
-                                        "user_id": {"type": "string", "description": "The ID of the user whose tasks to list"},
-                                        "limit": {"type": "integer", "description": "Maximum number of tasks to return (default: 10)"},
-                                        "offset": {"type": "integer", "description": "Number of tasks to skip (default: 0)"}
-                                    },
-                                    "required": ["user_id"]
-                                }
-                            }
-                        },
-                        {
-                            "type": "function",
-                            "function": {
-                                "name": "update_task",
-                                "description": "Update an existing task for a user. Requires user_id and task_id.",
-                                "parameters": {
-                                    "type": "object",
-                                    "properties": {
-                                        "user_id": {"type": "string", "description": "The ID of the user"},
-                                        "task_id": {"type": "string", "description": "The ID of the task to update"},
-                                        "title": {"type": "string", "description": "New title for the task (optional)"},
-                                        "description": {"type": "string", "description": "New description for the task (optional)"},
-                                        "is_completed": {"type": "boolean", "description": "New completion status for the task (optional)"}
-                                    },
-                                    "required": ["user_id", "task_id"]
-                                }
-                            }
-                        },
-                        {
-                            "type": "function",
-                            "function": {
-                                "name": "complete_task",
-                                "description": "Mark a task as complete or incomplete for a user. Requires user_id and task_id.",
-                                "parameters": {
-                                    "type": "object",
-                                    "properties": {
-                                        "user_id": {"type": "string", "description": "The ID of the user"},
-                                        "task_id": {"type": "string", "description": "The ID of the task to update"},
-                                        "is_completed": {"type": "boolean", "description": "Whether the task is completed (default: true)"}
-                                    },
-                                    "required": ["user_id", "task_id"]
-                                }
-                            }
-                        },
-                        {
-                            "type": "function",
-                            "function": {
-                                "name": "delete_task",
-                                "description": "Delete a task for a user. Requires user_id and task_id.",
-                                "parameters": {
-                                    "type": "object",
-                                    "properties": {
-                                        "user_id": {"type": "string", "description": "The ID of the user"},
-                                        "task_id": {"type": "string", "description": "The ID of the task to delete"}
-                                    },
-                                    "required": ["user_id", "task_id"]
-                                }
-                            }
-                        }
-                    ],
+                    tools=tools,
                     tool_choice="auto"
                 )
 
@@ -288,75 +204,71 @@ class TodoAgent:
                     import json
                     args_dict = json.loads(function_args)
                     
-                    # Get user_id from arguments
-                    user_id_str = args_dict.get("user_id")
-                    if not user_id_str:
-                        result = {"success": False, "message": "Missing user_id in tool arguments"}
-                    else:
-                        try:
-                            user_uuid = uuid.UUID(user_id_str)
-                            # Create a temporary user object for the service
-                            from ..models.user import User
-                            temp_user = User(id=user_uuid, email="temp@example.com", is_active=True, hashed_password="temp")
-                            
-                            # Initialize TodoService
-                            from ..services.todo_service import TodoService
-                            todo_service = TodoService()
+                    try:
+                        user_uuid = uuid.UUID(user_id)
+                        # Create a temporary user object for the service
+                        from ..models.user import User
+                        # Note: We use the real user_id passed from the controller
+                        temp_user = User(id=user_uuid, email="temp@example.com", is_active=True, hashed_password="temp")
+                        
+                        # Initialize TodoService
+                        from ..services.todo_service import TodoService
+                        todo_service = TodoService()
 
-                            if function_name == "add_task":
-                                from ..models.todo_task import TodoTaskCreate
-                                todo_data = TodoTaskCreate(
-                                    title=args_dict.get("title"),
-                                    description=args_dict.get("description", ""),
-                                    is_completed=False
-                                )
-                                task = await todo_service.create_todo(todo_data, temp_user, session)
-                                result = {
-                                    "success": True, 
-                                    "message": f"Task '{task.title}' added successfully",
-                                    "task": {"id": str(task.id), "title": task.title, "is_completed": task.is_completed}
-                                }
-                            elif function_name == "list_tasks":
-                                tasks = await todo_service.get_user_todos(temp_user, session)
-                                # Apply limit/offset if provided
-                                limit = args_dict.get("limit", 10)
-                                offset = args_dict.get("offset", 0)
-                                tasks_paged = tasks[offset:offset+limit]
-                                result = {
-                                    "success": True,
-                                    "message": f"Retrieved {len(tasks_paged)} tasks",
-                                    "tasks": [{"id": str(t.id), "title": t.title, "is_completed": t.is_completed} for t in tasks_paged]
-                                }
-                            elif function_name == "update_task":
-                                from ..models.todo_task import TodoTaskUpdate
-                                task_id = uuid.UUID(args_dict.get("task_id"))
-                                todo_update = TodoTaskUpdate(
-                                    title=args_dict.get("title"),
-                                    description=args_dict.get("description"),
-                                    is_completed=args_dict.get("is_completed")
-                                )
-                                task = await todo_service.update_todo(task_id, todo_update, temp_user, session)
-                                if task:
-                                    result = {"success": True, "message": "Task updated successfully", "task": {"id": str(task.id), "title": task.title}}
-                                else:
-                                    result = {"success": False, "message": "Task not found or access denied"}
-                            elif function_name == "complete_task":
-                                task_id = uuid.UUID(args_dict.get("task_id"))
-                                is_completed = args_dict.get("is_completed", True)
-                                task = await todo_service.toggle_todo_completion(task_id, is_completed, temp_user, session)
-                                if task:
-                                    status = "completed" if is_completed else "marked incomplete"
-                                    result = {"success": True, "message": f"Task {status} successfully"}
-                                else:
-                                    result = {"success": False, "message": "Task not found or access denied"}
-                            elif function_name == "delete_task":
-                                task_id = uuid.UUID(args_dict.get("task_id"))
-                                success = await todo_service.delete_todo(task_id, temp_user, session)
-                                result = {"success": success, "message": "Task deleted successfully" if success else "Task not found or access denied"}
+                        if function_name == "add_task":
+                            from ..models.todo_task import TodoTaskCreate
+                            todo_data = TodoTaskCreate(
+                                title=args_dict.get("title"),
+                                description=args_dict.get("description", ""),
+                                is_completed=False
+                            )
+                            task = await todo_service.create_todo(todo_data, temp_user, session)
+                            result = {
+                                "success": True, 
+                                "message": f"Task '{task.title}' added successfully",
+                                "task": {"id": str(task.id), "title": task.title, "is_completed": task.is_completed}
+                            }
+                        elif function_name == "list_tasks":
+                            tasks = await todo_service.get_user_todos(temp_user, session)
+                            # Apply limit/offset if provided
+                            limit = args_dict.get("limit", 10)
+                            offset = args_dict.get("offset", 0)
+                            tasks_paged = tasks[offset:offset+limit]
+                            result = {
+                                "success": True,
+                                "message": f"Retrieved {len(tasks_paged)} tasks",
+                                "tasks": [{"id": str(t.id), "title": t.title, "is_completed": t.is_completed} for t in tasks_paged]
+                            }
+                        elif function_name == "update_task":
+                            from ..models.todo_task import TodoTaskUpdate
+                            task_id = uuid.UUID(args_dict.get("task_id"))
+                            todo_update = TodoTaskUpdate(
+                                title=args_dict.get("title"),
+                                description=args_dict.get("description"),
+                                is_completed=args_dict.get("is_completed")
+                            )
+                            task = await todo_service.update_todo(task_id, todo_update, temp_user, session)
+                            if task:
+                                result = {"success": True, "message": "Task updated successfully", "task": {"id": str(task.id), "title": task.title}}
                             else:
-                                result = {"success": False, "message": f"Unknown tool: {function_name}"}
-                        except ValueError as e:
-                            result = {"success": False, "message": f"Invalid ID format: {str(e)}"}
+                                result = {"success": False, "message": "Task not found or access denied"}
+                        elif function_name == "complete_task":
+                            task_id = uuid.UUID(args_dict.get("task_id"))
+                            is_completed = args_dict.get("is_completed", True)
+                            task = await todo_service.toggle_todo_completion(task_id, is_completed, temp_user, session)
+                            if task:
+                                status = "completed" if is_completed else "marked incomplete"
+                                result = {"success": True, "message": f"Task {status} successfully"}
+                            else:
+                                result = {"success": False, "message": "Task not found or access denied"}
+                        elif function_name == "delete_task":
+                            task_id = uuid.UUID(args_dict.get("task_id"))
+                            success = await todo_service.delete_todo(task_id, temp_user, session)
+                            result = {"success": success, "message": "Task deleted successfully" if success else "Task not found or access denied"}
+                        else:
+                            result = {"success": False, "message": f"Unknown tool: {function_name}"}
+                    except ValueError as e:
+                        result = {"success": False, "message": f"Invalid ID format: {str(e)}"}
                 except Exception as e:
                     result = {
                         "success": False,
@@ -371,7 +283,7 @@ class TodoAgent:
                     "content": str(result)  # Result of the function call
                 })
 
-        # Get the final response from the model after function calls
+            # Get the final response from the model after function calls
             if settings.AI_PROVIDER.lower() == "groq":
                 final_response = await self.client.chat.completions.create(
                     messages=messages,

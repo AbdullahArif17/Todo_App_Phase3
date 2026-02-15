@@ -1024,6 +1024,7 @@ class ChatService:
         agent_response_text = await self.todo_agent.process_message_with_context(
             user_input=user_message_content,
             conversation_history=history,
+            user_id=str(user_id),
             session=session
         )
 

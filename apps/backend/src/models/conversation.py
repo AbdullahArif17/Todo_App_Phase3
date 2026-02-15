@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 class ConversationBase(SQLModel):
     title: str = Field(default="New Conversation", max_length=255)
-    user_id: uuid.UUID = Field(foreign_key="users.id")
+    user_id: uuid.UUID = Field(foreign_key="user.id")
 
 
 from .tag import ConversationTag
@@ -21,7 +21,7 @@ class Conversation(ConversationBase, table=True):
     __tablename__ = "conversations"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    user_id: uuid.UUID = Field(foreign_key="users.id", nullable=False, index=True)  # Add index
+    user_id: uuid.UUID = Field(foreign_key="user.id", nullable=False, index=True)  # Add index
     user: "User" = Relationship(back_populates="conversations")
     messages: list["Message"] = Relationship(back_populates="conversation", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 

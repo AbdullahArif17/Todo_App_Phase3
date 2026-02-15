@@ -68,8 +68,8 @@ app.add_middleware(
 # Include API routers
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(todos_router, prefix="/api/v1/todos", tags=["Todos"])
-app.include_router(chat_router, prefix="/api/v1", tags=["Chat"])
-app.include_router(conversations_router, prefix="/api/v1", tags=["Conversations"])
+app.include_router(chat_router, prefix="/api/v1/chat", tags=["Chat"])
+app.include_router(conversations_router, prefix="/api/v1/conversations", tags=["Conversations"])
 
 
 @app.get("/")

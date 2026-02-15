@@ -17,7 +17,7 @@ from ...utils.logging import log_chat_access_attempt, log_security_event, setup_
 from ...utils.rate_limit import ai_rate_limiter
 import logging
 
-router = APIRouter(prefix="/chat", tags=["chat"])
+router = APIRouter(tags=["chat"])
 
 
 def sanitize_input(input_text: str) -> str:

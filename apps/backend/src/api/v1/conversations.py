@@ -10,7 +10,7 @@ from ...services.chat_service import ChatService
 from ...services.analytics_service import AnalyticsService
 
 
-router = APIRouter(prefix="/conversations", tags=["conversations"])
+router = APIRouter(tags=["conversations"])
 
 
 @router.get("/", response_model=List[Dict[str, Any]])

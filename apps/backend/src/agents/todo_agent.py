@@ -28,6 +28,7 @@ class TodoAgent:
 
         self.temperature = settings.AI_TEMPERATURE
         self.max_tokens = settings.AI_MAX_TOKENS
+        print(f"DEBUG: TodoAgent initialized with provider: {settings.AI_PROVIDER}, model: {self.model}")
 
     async def process_message_with_context(self, user_input: str, conversation_history: List[Dict[str, str]], session: Session = None) -> str:
         """

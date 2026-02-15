@@ -12,7 +12,7 @@ class TemplateBase(SQLModel):
     name: str = Field(max_length=255, nullable=False)
     description: Optional[str] = Field(default=None, max_length=1000)
     content: str = Field(nullable=False)  # The template content
-    user_id: uuid.UUID = Field(foreign_key="user.id")  # Templates are user-specific
+    user_id: uuid.UUID = Field(foreign_key="users.id")  # Templates are user-specific
     is_public: bool = Field(default=False)  # Whether the template is public
 
 

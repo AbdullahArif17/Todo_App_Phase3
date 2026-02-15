@@ -8,8 +8,8 @@ from typing import Optional, List, Dict, Any
 import uuid
 from sqlmodel import Session
 
-from apps.backend.src.services.todo_service import TodoService
-from apps.backend.src.database import engine
+from ...services.todo_service import TodoService
+from ...database import engine
 
 
 class AddTaskParams(BaseModel):
@@ -74,7 +74,7 @@ class MCPTodoTools:
 
         try:
             # Create the todo using the existing service
-            from apps.backend.src.schemas.todo_task import TodoTaskCreate
+            from ...schemas.todo_task import TodoTaskCreate
 
             todo_create = TodoTaskCreate(
                 title=params.title,
@@ -191,7 +191,7 @@ class MCPTodoTools:
 
         try:
             # Check if the task exists and belongs to the user
-            from apps.backend.src.models.todo_task import TodoTask
+            from ...models.todo_task import TodoTask
             from sqlmodel import select
 
             statement = select(TodoTask).where(
@@ -210,7 +210,7 @@ class MCPTodoTools:
                 )
 
             # Prepare update data
-            from apps.backend.src.schemas.todo_task import TodoTaskUpdate
+            from ...schemas.todo_task import TodoTaskUpdate
             update_data = {}
             if params.title is not None:
                 update_data["title"] = params.title
@@ -282,7 +282,7 @@ class MCPTodoTools:
 
         try:
             # Check if the task exists and belongs to the user
-            from apps.backend.src.models.todo_task import TodoTask
+            from ...models.todo_task import TodoTask
             from sqlmodel import select
 
             statement = select(TodoTask).where(
@@ -301,7 +301,7 @@ class MCPTodoTools:
                 )
 
             # Update completion status
-            from apps.backend.src.schemas.todo_task import TodoTaskUpdate
+            from ...schemas.todo_task import TodoTaskUpdate
             todo_update = TodoTaskUpdate(is_completed=params.is_completed)
             updated_todo = self.todo_service.update_todo(
                 session=db_session,
@@ -356,7 +356,7 @@ class MCPTodoTools:
 
         try:
             # Check if the task exists and belongs to the user
-            from apps.backend.src.models.todo_task import TodoTask
+            from ...models.todo_task import TodoTask
             from sqlmodel import select
 
             statement = select(TodoTask).where(

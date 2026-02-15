@@ -4,12 +4,12 @@ Integration tests for enhanced conversation features.
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session
-from apps.backend.src.main import app
-from apps.backend.src.database import engine
-from apps.backend.src.models.user import User
-from apps.backend.src.models.conversation import Conversation
-from apps.backend.src.models.message import Message
-from apps.backend.src.services.chat_service import ChatService
+from main import app
+from database import engine
+from models.user import User
+from models.conversation import Conversation
+from models.message import Message
+from services.chat_service import ChatService
 from unittest.mock import patch, MagicMock
 import uuid
 
@@ -325,8 +325,8 @@ class TestEnhancedConversationFeatures:
 
     def test_intelligent_conversation_truncation(self):
         """Test intelligent conversation truncation algorithms."""
-        from apps.backend.src.utils.ai_utils import intelligent_conversation_truncation
-        from apps.backend.src.models.message import Message
+        from utils.ai_utils import intelligent_conversation_truncation
+        from models.message import Message
         from datetime import datetime
 
         # Create mock messages
@@ -435,7 +435,7 @@ class TestConversationSecurity:
         """Test that rate limiting is properly enforced."""
         # This would require mocking the rate limiter to test properly
         # For now, we'll verify the rate limiter is used in the endpoint
-        from apps.backend.src.utils.rate_limit import ai_rate_limiter
+        from utils.rate_limit import ai_rate_limiter
 
         # Verify the rate limiter exists and has the expected interface
         assert hasattr(ai_rate_limiter, 'is_allowed')

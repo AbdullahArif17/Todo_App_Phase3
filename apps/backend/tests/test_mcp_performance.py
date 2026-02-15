@@ -7,8 +7,8 @@ import asyncio
 import pytest
 from unittest.mock import Mock
 from sqlmodel import Session
-from apps.backend.src.mcp_server.tools.todo_tools import MCPTodoTools
-from apps.backend.src.models.todo_task import TodoTask
+from mcp_server.tools.todo_tools import MCPTodoTools
+from models.todo_task import TodoTask
 import uuid
 
 

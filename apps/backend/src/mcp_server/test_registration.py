@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, MagicMock
 from mcp.types import ToolResult
 import uuid
 
-from apps.backend.src.mcp_server.tools.todo_tools import MCPTodoTools, AddTaskParams, ListTasksParams, UpdateTaskParams, CompleteTaskParams, DeleteTaskParams
-from apps.backend.src.mcp_server.main import mcp_todo_server
+from mcp_server.tools.todo_tools import MCPTodoTools, AddTaskParams, ListTasksParams, UpdateTaskParams, CompleteTaskParams, DeleteTaskParams
+from mcp_server.main import mcp_todo_server
 
 
 def test_add_task_tool_registered():

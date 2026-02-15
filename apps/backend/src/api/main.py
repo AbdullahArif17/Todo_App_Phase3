@@ -77,8 +77,8 @@ def api_health_check():
 # Import and include routers
 from src.api.v1.auth import router as auth_router
 from src.api.v1.todos import router as todos_router
-from apps.backend.src.api.v1.chat import router as chat_router
-from apps.backend.src.api.v1.conversations import router as conversations_router
+from api.v1.chat import router as chat_router
+from api.v1.conversations import router as conversations_router
 
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(todos_router, prefix="/api/v1/todos", tags=["Todos"])

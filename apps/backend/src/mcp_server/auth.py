@@ -8,10 +8,10 @@ from typing import Optional
 import jwt
 from jwt.exceptions import InvalidTokenError
 from sqlmodel import Session
-from apps.backend.src.config import settings
-from apps.backend.src.models.user import User
-from apps.backend.src.database import engine
-from apps.backend.src.services.user_service import UserService
+from config import settings
+from models.user import User
+from database import engine
+from services.user_service import UserService
 import uuid
 
 

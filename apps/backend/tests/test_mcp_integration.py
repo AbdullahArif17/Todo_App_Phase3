@@ -5,9 +5,9 @@ Tests to verify end-to-end functionality of MCP tool operations
 import pytest
 from unittest.mock import Mock, patch
 from sqlmodel import Session
-from apps.backend.src.mcp_server.tools.todo_tools import MCPTodoTools
-from apps.backend.src.models.user import User
-from apps.backend.src.models.todo_task import TodoTask
+from mcp_server.tools.todo_tools import MCPTodoTools
+from models.user import User
+from models.todo_task import TodoTask
 from mcp.types import ToolResult
 import uuid
 

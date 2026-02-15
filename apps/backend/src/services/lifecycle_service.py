@@ -2,9 +2,9 @@ from sqlmodel import Session, select
 from datetime import datetime, timedelta
 from typing import List
 import uuid
-from apps.backend.src.models.conversation import Conversation
-from apps.backend.src.models.message import Message
-from apps.backend.src.services.chat_service import ChatService
+from models.conversation import Conversation
+from models.message import Message
+from services.chat_service import ChatService
 
 
 class LifecycleService:

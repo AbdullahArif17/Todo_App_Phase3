@@ -4,10 +4,10 @@ Security tests for chat endpoint access control
 import pytest
 from fastapi.testclient import TestClient
 from uuid import UUID
-from apps.backend.src.main import app
-from apps.backend.src.models.user import User
-from apps.backend.src.models.conversation import Conversation
-from apps.backend.src.schemas.chat import ChatRequest
+from main import app
+from models.user import User
+from models.conversation import Conversation
+from schemas.chat import ChatRequest
 
 
 def test_unauthorized_user_cannot_access_other_users_conversation():

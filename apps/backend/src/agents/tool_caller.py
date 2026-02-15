@@ -7,7 +7,7 @@ import json
 import uuid
 from sqlmodel import Session
 
-from apps.backend.src.mcp_server.main import mcp_todo_server
+from ..mcp_server.main import mcp_todo_server
 
 
 class MCPTodoToolCaller:

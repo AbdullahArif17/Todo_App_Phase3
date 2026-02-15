@@ -4,11 +4,11 @@ End-to-end tests for AI chat endpoint feature
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session
-from apps.backend.src.main import app
-from apps.backend.src.database import engine
-from apps.backend.src.models.user import User
-from apps.backend.src.models.conversation import Conversation
-from apps.backend.src.models.message import Message
+from main import app
+from database import engine
+from models.user import User
+from models.conversation import Conversation
+from models.message import Message
 import uuid
 
 

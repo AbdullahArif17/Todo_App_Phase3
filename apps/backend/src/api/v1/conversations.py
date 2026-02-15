@@ -33,7 +33,7 @@ def get_my_conversations(
         List of user's conversations
     """
     # Get conversations for the user
-    from apps.backend.src.models.conversation import Conversation
+    from models.conversation import Conversation
     from sqlmodel import select
 
     statement = select(Conversation).where(
@@ -113,7 +113,7 @@ def delete_conversation(
         Confirmation message
     """
     # Verify user has access to the conversation
-    from apps.backend.src.models.conversation import Conversation
+    from models.conversation import Conversation
     from sqlmodel import select
 
     statement = select(Conversation).where(

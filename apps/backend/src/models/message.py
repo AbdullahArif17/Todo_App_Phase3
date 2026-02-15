@@ -4,7 +4,7 @@ from datetime import datetime
 import uuid
 from sqlalchemy import Index
 if TYPE_CHECKING:
-    from apps.backend.src.models.conversation import Conversation
+    from models.conversation import Conversation
 
 
 class MessageBase(SQLModel):

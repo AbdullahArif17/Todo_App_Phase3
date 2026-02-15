@@ -5,13 +5,13 @@ import time
 import asyncio
 import pytest
 from sqlmodel import Session
-from apps.backend.src.database import engine
-from apps.backend.src.models.user import User
-from apps.backend.src.models.conversation import Conversation
-from apps.backend.src.models.message import Message
-from apps.backend.src.services.chat_service import ChatService
-from apps.backend.src.utils.ai_utils import intelligent_conversation_truncation, truncate_conversation_history
-from apps.backend.src.utils.metrics import record_response_time, get_current_metrics
+from database import engine
+from models.user import User
+from models.conversation import Conversation
+from models.message import Message
+from services.chat_service import ChatService
+from utils.ai_utils import intelligent_conversation_truncation, truncate_conversation_history
+from utils.metrics import record_response_time, get_current_metrics
 import uuid
 from datetime import datetime, timedelta
 from typing import List
@@ -124,7 +124,7 @@ class PerformanceBenchmarkSuite:
         print(f"Benchmarking truncation algorithms with {num_messages} messages...")
 
         # Create mock messages
-        from apps.backend.src.models.message import Message
+        from models.message import Message
         import random
         from datetime import datetime, timedelta
 

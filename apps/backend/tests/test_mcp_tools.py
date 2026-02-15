@@ -5,10 +5,10 @@ Tests to verify individual functionality of each MCP tool
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from sqlmodel import Session
-from apps.backend.src.mcp_server.tools.todo_tools import MCPTodoTools
-from apps.backend.src.mcp_server.auth import validate_user_id_param
-from apps.backend.src.models.user import User
-from apps.backend.src.models.todo_task import TodoTask
+from mcp_server.tools.todo_tools import MCPTodoTools
+from mcp_server.auth import validate_user_id_param
+from models.user import User
+from models.todo_task import TodoTask
 from mcp.types import ToolResult
 import uuid
 

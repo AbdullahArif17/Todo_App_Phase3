@@ -1,8 +1,8 @@
 from typing import Dict, Any, List
 from pydantic import BaseModel
 import uuid
-from apps.backend.src.services.todo_service import TodoService
-from apps.backend.src.models.todo_task import TodoTask
+from ..services.todo_service import TodoService
+from ..models.todo_task import TodoTask
 
 
 class CreateTodoParams(BaseModel):
@@ -158,8 +158,8 @@ class TodoTools:
             Dictionary with result of the operation
         """
         try:
-            from apps.backend.src.models.todo_task import TodoTask
-            from apps.backend.src.schemas.todo_task import TodoTaskCreate
+            from models.todo_task import TodoTask
+            from schemas.todo_task import TodoTaskCreate
 
             todo_create = TodoTaskCreate(
                 title=title,
@@ -202,7 +202,7 @@ class TodoTools:
             Dictionary with result of the operation
         """
         try:
-            from apps.backend.src.schemas.todo_task import TodoTaskUpdate
+            from schemas.todo_task import TodoTaskUpdate
 
             update_data = {}
             if title is not None:

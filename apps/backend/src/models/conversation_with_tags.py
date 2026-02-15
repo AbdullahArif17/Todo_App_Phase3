@@ -5,9 +5,9 @@ import uuid
 from sqlalchemy import Index
 
 if TYPE_CHECKING:
-    from apps.backend.src.models.user import User
-    from apps.backend.src.models.message import Message
-    from apps.backend.src.models.tag import Tag, ConversationTag
+    from models.user import User
+    from models.message import Message
+    from models.tag import Tag, ConversationTag
 
 # Using ConversationTag from tag.py would be better, but if we must define it here:
 class ConversationTag(SQLModel, table=True):

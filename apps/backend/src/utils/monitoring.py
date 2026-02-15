@@ -363,23 +363,23 @@ def check_alerts():
 # Add performance monitoring for AI responses
 def record_ai_response_time(duration_ms: float, model_name: str = "default"):
     """Convenience function to record AI response time."""
-    from apps.backend.src.utils.monitoring import performance_monitor
+    from utils.monitoring import performance_monitor
     performance_monitor.record_ai_response_time(duration_ms, model_name)
 
 
 def record_ai_error(error_type: str, model_name: str = "default"):
     """Convenience function to record AI error."""
-    from apps.backend.src.utils.monitoring import performance_monitor
+    from utils.monitoring import performance_monitor
     performance_monitor.record_ai_error(error_type, model_name)
 
 
 def record_token_usage(tokens: int, model_name: str = "default", user_id: Optional[uuid.UUID] = None):
     """Convenience function to record token usage."""
-    from apps.backend.src.utils.monitoring import performance_monitor
+    from utils.monitoring import performance_monitor
     performance_monitor.record_token_usage(tokens, model_name, user_id)
 
 
 def get_ai_performance_metrics(model_name: str = "default", hours: int = 1) -> Dict[str, Any]:
     """Convenience function to get AI performance metrics."""
-    from apps.backend.src.utils.monitoring import performance_monitor
+    from utils.monitoring import performance_monitor
     return performance_monitor.get_ai_performance_metrics(model_name, hours)

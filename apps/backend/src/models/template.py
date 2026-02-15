@@ -5,7 +5,7 @@ import uuid
 from sqlalchemy import Index
 
 if TYPE_CHECKING:
-    from apps.backend.src.models.user import User
+    from models.user import User
 
 
 class TemplateBase(SQLModel):

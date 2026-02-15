@@ -69,7 +69,7 @@ async def chat_endpoint(
     """
     # Verify that the user_id in the path matches the authenticated user
     if str(current_user.id) != str(user_id):
-        from apps.backend.src.utils.logging import log_security_event
+        from ...utils.logging import log_security_event
         log_security_event("UNAUTHORIZED_ACCESS_ATTEMPT", current_user.id, f"Attempted to access user {user_id}'s chat")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -108,7 +108,7 @@ async def chat_endpoint(
 
     for pattern in harmful_patterns:
         if re.search(pattern, chat_request.message, re.IGNORECASE):
-            from apps.backend.src.utils.logging import log_security_event
+            from ...utils.logging import log_security_event
             log_security_event("MALICIOUS_CONTENT_DETECTED", current_user.id, f"Message contained harmful pattern: {pattern}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -138,7 +138,7 @@ async def chat_endpoint(
     else:
         # Validate that the user can access this conversation
         if not chat_service.validate_conversation_access(session, conversation_id, current_user.id):
-            from apps.backend.src.utils.logging import log_security_event
+            from ...utils.logging import log_security_event
             log_security_event("UNAUTHORIZED_CONVERSATION_ACCESS", current_user.id, f"Attempted to access conversation {conversation_id}")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -161,11 +161,11 @@ async def chat_endpoint(
     )
 
     # Truncate conversation history to stay within token limits
-    from apps.backend.src.utils.ai_utils import truncate_conversation_history
+    from ...utils.ai_utils import truncate_conversation_history
     truncated_history = truncate_conversation_history(conversation_history[:-1])  # Exclude the current message
 
     # Format the conversation history for the AI agent
-    from apps.backend.src.utils.ai_utils import format_conversation_for_ai
+    from ...utils.ai_utils import format_conversation_for_ai
     formatted_history = format_conversation_for_ai(truncated_history)
 
     # Log the start of AI processing
@@ -230,7 +230,7 @@ def get_user_conversations(
         )
 
     # Get conversations for the user
-    from apps.backend.src.models.conversation import Conversation
+    from ...models.conversation import Conversation
     from sqlmodel import select
 
     statement = select(Conversation).where(
@@ -353,7 +353,7 @@ def search_conversations(
     conversations_detail = []
     for conv_id in conversation_ids:
         # Get conversation details
-        from apps.backend.src.models.conversation import Conversation
+        from ...models.conversation import Conversation
         from sqlmodel import select
 
         conv_statement = select(Conversation).where(

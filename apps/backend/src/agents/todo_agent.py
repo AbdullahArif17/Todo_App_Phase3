@@ -286,94 +286,76 @@ class TodoAgent:
                 try:
                     import json
                     args_dict = json.loads(function_args)
-
-                    # Execute the tool through the MCP server
-                    from ..mcp_server.main import mcp_todo_server
-                    server = mcp_todo_server.get_server()
-
-                    if function_name in server._tools:
-                        # For now, we'll simulate the tool execution
-                        # In a real implementation, this would connect to the MCP server
-                        if function_name == "add_task":
-                            # In a real implementation, this would call the actual tool
-                            result = {
-                                "success": True,
-                                "message": f"Task '{args_dict.get('title', 'Untitled')}' added successfully",
-                                "task": {
-                                    "id": str(uuid.uuid4()),  # Simulated task ID
-                                    "title": args_dict.get("title"),
-                                    "description": args_dict.get("description", ""),
-                                    "is_completed": False
-                                }
-                            }
-                        elif function_name == "list_tasks":
-                            # In a real implementation, this would call the actual tool
-                            result = {
-                                "success": True,
-                                "message": "Retrieved 2 tasks for user",
-                                "tasks": [
-                                    {
-                                        "id": str(uuid.uuid4()),
-                                        "title": "Sample Task 1",
-                                        "description": "Sample description",
-                                        "is_completed": False
-                                    },
-                                    {
-                                        "id": str(uuid.uuid4()),
-                                        "title": "Sample Task 2",
-                                        "description": "Another sample task",
-                                        "is_completed": True
-                                    }
-                                ]
-                            }
-                        elif function_name == "update_task":
-                            # In a real implementation, this would call the actual tool
-                            result = {
-                                "success": True,
-                                "message": f"Task updated successfully",
-                                "task": {
-                                    "id": args_dict.get('task_id'),
-                                    "title": args_dict.get('title', 'Updated Task'),
-                                    "description": args_dict.get('description', ''),
-                                    "is_completed": args_dict.get('is_completed', False)
-                                }
-                            }
-                        elif function_name == "complete_task":
-                            # In a real implementation, this would call the actual tool
-                            status = "completed" if args_dict.get('is_completed', True) else "marked as incomplete"
-                            result = {
-                                "success": True,
-                                "message": f"Task has been {status} successfully",
-                                "task": {
-                                    "id": args_dict.get('task_id'),
-                                    "title": "Sample Task",
-                                    "description": "Sample description",
-                                    "is_completed": args_dict.get('is_completed', True)
-                                }
-                            }
-                        elif function_name == "delete_task":
-                            # In a real implementation, this would call the actual tool
-                            result = {
-                                "success": True,
-                                "message": "Task deleted successfully"
-                            }
-                        else:
-                            # Unknown tool
-                            result = {
-                                "success": False,
-                                "message": f"Unknown tool: {function_name}"
-                            }
+                    
+                    # Get user_id from arguments
+                    user_id_str = args_dict.get("user_id")
+                    if not user_id_str:
+                        result = {"success": False, "message": "Missing user_id in tool arguments"}
                     else:
-                        result = {
-                            "success": False,
-                            "message": f"Tool '{function_name}' not found"
-                        }
+                        try:
+                            user_uuid = uuid.UUID(user_id_str)
+                            # Create a temporary user object for the service
+                            from ..models.user import User
+                            temp_user = User(id=user_uuid, email="temp@example.com", is_active=True, hashed_password="temp")
+                            
+                            # Initialize TodoService
+                            from ..services.todo_service import TodoService
+                            todo_service = TodoService()
 
-                except Exception as e:
-                    result = {
-                        "success": False,
-                        "message": f"Error executing function {function_name}: {str(e)}"
-                    }
+                            if function_name == "add_task":
+                                from ..models.todo_task import TodoTaskCreate
+                                todo_data = TodoTaskCreate(
+                                    title=args_dict.get("title"),
+                                    description=args_dict.get("description", ""),
+                                    is_completed=False
+                                )
+                                task = await todo_service.create_todo(todo_data, temp_user, session)
+                                result = {
+                                    "success": True, 
+                                    "message": f"Task '{task.title}' added successfully",
+                                    "task": {"id": str(task.id), "title": task.title, "is_completed": task.is_completed}
+                                }
+                            elif function_name == "list_tasks":
+                                tasks = await todo_service.get_user_todos(temp_user, session)
+                                # Apply limit/offset if provided
+                                limit = args_dict.get("limit", 10)
+                                offset = args_dict.get("offset", 0)
+                                tasks_paged = tasks[offset:offset+limit]
+                                result = {
+                                    "success": True,
+                                    "message": f"Retrieved {len(tasks_paged)} tasks",
+                                    "tasks": [{"id": str(t.id), "title": t.title, "is_completed": t.is_completed} for t in tasks_paged]
+                                }
+                            elif function_name == "update_task":
+                                from ..models.todo_task import TodoTaskUpdate
+                                task_id = uuid.UUID(args_dict.get("task_id"))
+                                todo_update = TodoTaskUpdate(
+                                    title=args_dict.get("title"),
+                                    description=args_dict.get("description"),
+                                    is_completed=args_dict.get("is_completed")
+                                )
+                                task = await todo_service.update_todo(task_id, todo_update, temp_user, session)
+                                if task:
+                                    result = {"success": True, "message": "Task updated successfully", "task": {"id": str(task.id), "title": task.title}}
+                                else:
+                                    result = {"success": False, "message": "Task not found or access denied"}
+                            elif function_name == "complete_task":
+                                task_id = uuid.UUID(args_dict.get("task_id"))
+                                is_completed = args_dict.get("is_completed", True)
+                                task = await todo_service.toggle_todo_completion(task_id, is_completed, temp_user, session)
+                                if task:
+                                    status = "completed" if is_completed else "marked incomplete"
+                                    result = {"success": True, "message": f"Task {status} successfully"}
+                                else:
+                                    result = {"success": False, "message": "Task not found or access denied"}
+                            elif function_name == "delete_task":
+                                task_id = uuid.UUID(args_dict.get("task_id"))
+                                success = await todo_service.delete_todo(task_id, temp_user, session)
+                                result = {"success": success, "message": "Task deleted successfully" if success else "Task not found or access denied"}
+                            else:
+                                result = {"success": False, "message": f"Unknown tool: {function_name}"}
+                        except ValueError as e:
+                            result = {"success": False, "message": f"Invalid ID format: {str(e)}"}
 
                 # Add function response to the messages
                 messages.append({

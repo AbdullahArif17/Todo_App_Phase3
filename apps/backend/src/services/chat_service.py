@@ -221,7 +221,7 @@ class ChatService:
         """
         try:
             # Create new conversation
-            from models.conversation import Conversation
+            from ..models.conversation import Conversation
             from datetime import datetime
             import uuid
 
@@ -243,7 +243,7 @@ class ChatService:
 
             # Import messages
             for msg_data in import_data.get("messages", []):
-                from models.message import Message
+                from ..models.message import Message
 
                 message = Message(
                     id=uuid.UUID(msg_data["id"]) if msg_data.get("id") else uuid.uuid4(),
@@ -288,7 +288,7 @@ class ChatService:
             session.add(parent_conversation)
 
             # Create the new branched conversation
-            from models.conversation import Conversation
+            from ..models.conversation import Conversation
             from datetime import datetime
             import uuid
 
@@ -324,7 +324,7 @@ class ChatService:
         Returns:
             List of conversation IDs that branch from the parent
         """
-        from models.conversation import Conversation
+        from ..models.conversation import Conversation
         from sqlmodel import select
 
         # First verify the user has access to the parent conversation
@@ -355,8 +355,8 @@ class ChatService:
         Returns:
             List of conversation IDs that match the search term
         """
-        from models.conversation import Conversation
-        from models.message import Message
+        from ..models.conversation import Conversation
+        from ..models.message import Message
         from sqlmodel import select, and_, or_
         from sqlalchemy import func
 
@@ -402,7 +402,7 @@ class ChatService:
         Returns:
             List of messages that match the search term
         """
-        from models.message import Message
+        from ..models.message import Message
         from sqlmodel import select, and_
 
         # Verify user has access to the conversation
@@ -435,8 +435,8 @@ class ChatService:
         Returns:
             True if successful, False otherwise
         """
-        from models.conversation import Conversation
-        from models.tag import Tag, conversation_tag
+        from ..models.conversation import Conversation
+        from ..models.tag import Tag, conversation_tag
         from sqlmodel import select
 
         # Verify user has access to the conversation
@@ -493,8 +493,8 @@ class ChatService:
         Returns:
             True if successful, False otherwise
         """
-        from models.conversation import Conversation
-        from models.tag import Tag, conversation_tag
+        from ..models.conversation import Conversation
+        from ..models.tag import Tag, conversation_tag
         from sqlmodel import select
 
         # Verify user has access to the conversation
@@ -537,8 +537,8 @@ class ChatService:
         Returns:
             List of conversation IDs with the specified tag
         """
-        from models.conversation import Conversation
-        from models.tag import Tag
+        from ..models.conversation import Conversation
+        from ..models.tag import Tag
         from sqlmodel import select
         from sqlalchemy import text
 
@@ -582,8 +582,8 @@ class ChatService:
         Returns:
             True if successful, False otherwise
         """
-        from models.conversation import Conversation
-        from models.user import User
+        from ..models.conversation import Conversation
+        from ..models.user import User
         from sqlmodel import select
 
         # Verify the owner has access to the conversation
@@ -634,7 +634,7 @@ class ChatService:
         Returns:
             ID of the new conversation, or None if creation failed
         """
-        from models.template import Template
+        from ..models.template import Template
         from sqlmodel import select
 
         # Get the template
@@ -668,7 +668,7 @@ class ChatService:
         Returns:
             List of templates owned by the user
         """
-        from models.template import Template
+        from ..models.template import Template
         from sqlmodel import select
 
         statement = select(Template).where(Template.user_id == user_id)
@@ -685,7 +685,7 @@ class ChatService:
         Returns:
             List of public templates
         """
-        from models.template import Template
+        from ..models.template import Template
         from sqlmodel import select
 
         statement = select(Template).where(Template.is_public == True)
@@ -705,7 +705,7 @@ class ChatService:
         Returns:
             Number of messages archived
         """
-        from models.message import Message
+        from ..models.message import Message
         from sqlmodel import select
         from datetime import datetime, timedelta
 
@@ -790,7 +790,7 @@ class ChatService:
         Returns:
             List of created Message objects
         """
-        from models.message import Message
+        from ..models.message import Message
         from datetime import datetime
         import uuid
 
@@ -811,7 +811,7 @@ class ChatService:
             session.add(message)
 
         # Update conversation statistics
-        from models.conversation import Conversation
+        from ..models.conversation import Conversation
         conversation = session.get(Conversation, conversation_id)
         if conversation:
             conversation.last_activity = datetime.utcnow()
@@ -838,8 +838,8 @@ class ChatService:
         Returns:
             True if successful, False otherwise
         """
-        from models.conversation import Conversation
-        from models.message import Message
+        from ..models.conversation import Conversation
+        from ..models.message import Message
         from sqlmodel import select
 
         # Verify that the requesting user is the same as the user whose data is being deleted
@@ -878,8 +878,8 @@ class ChatService:
         Returns:
             True if successful, False otherwise
         """
-        from models.conversation import Conversation
-        from models.message import Message
+        from ..models.conversation import Conversation
+        from ..models.message import Message
         from sqlmodel import select
 
         # Verify user has access to this conversation
@@ -911,8 +911,8 @@ class ChatService:
         Returns:
             True if successful, False otherwise
         """
-        from models.conversation import Conversation
-        from models.message import Message
+        from ..models.conversation import Conversation
+        from ..models.message import Message
         from sqlmodel import select
 
         # Verify that the requesting user is the same as the user whose data is being anonymized
@@ -959,7 +959,7 @@ class ChatService:
             return None
 
         # Use the existing export_conversation method for each conversation
-        from models.conversation import Conversation
+        from ..models.conversation import Conversation
         from sqlmodel import select
 
         # Get all conversations for the user
@@ -994,8 +994,8 @@ class ChatService:
         Returns:
             Dictionary containing the agent's response and conversation info
         """
-        from models.conversation import Conversation
-        from models.message import Message
+        from ..models.conversation import Conversation
+        from ..models.message import Message
 
         # Create or get conversation
         if conversation_id is None:
@@ -1005,32 +1005,30 @@ class ChatService:
             # Validate access to existing conversation
             conversation = self.get_conversation_by_id(session, conversation_id, user_id)
             if not conversation:
-                raise ValueError("Access denied: You don't have permission to access this conversation.")
+                # If conversation not found, create a new one
+                conversation = self.create_conversation(session, user_id, "New Todo Conversation")
 
-        # Create user message in the conversation
-        user_message = self.create_message(session, conversation.id, "user", user_message_content)
-
-        # Get conversation history for context
+        # Get conversation history for context (excluding the message just added by the controller)
         messages = self.get_conversation_messages(session, conversation.id, user_id)
+        
+        # Prepare conversation history for the agent
+        # The controller has already saved the user's message, so it will be the last one in 'messages'
+        # TodoAgent.process_message_with_context expects history WITHOUT the current message
+        # as it appends user_input to the prompt itself.
+        history = [
+            {"role": msg.role, "content": msg.content}
+            for msg in messages[:-1] if len(messages) > 0
+        ]
 
-        # Build agent context with conversation history
-        agent_context = self.build_agent_context(conversation, messages, str(user_id))
+        # Call the agent with the user input and history
+        agent_response_text = await self.todo_agent.process_message_with_context(
+            user_input=user_message_content,
+            conversation_history=history,
+            session=session
+        )
 
-        # Create a thread for this conversation
-        thread = self.todo_agent.create_thread()
-
-        # Add the user's message to the thread
-        self.todo_agent.add_message_to_thread(thread.id, str(user_id), user_message_content)
-
-        # Run the agent to process the message with context
-        agent_response = self.todo_agent.run_agent_with_context(thread.id, str(user_id), additional_context=agent_context)
-
-        # Process the agent's response
-        processed_response = self.response_processor.process_response(agent_response)
-
-        # Create assistant message with the agent's response
-        assistant_message = self.create_message(session, conversation.id,
-                                              "assistant", processed_response.natural_language_response)
+        # Process the agent's response text
+        processed_response = self.response_processor.process_response(agent_response_text)
 
         return {
             "conversation_id": str(conversation.id),
@@ -1052,7 +1050,7 @@ class ChatService:
         Returns:
             List of created Message objects
         """
-        from models.message import Message
+        from ..models.message import Message
         from datetime import datetime
         import uuid
 
@@ -1073,7 +1071,7 @@ class ChatService:
             session.add(message)
 
         # Update conversation statistics
-        from models.conversation import Conversation
+        from ..models.conversation import Conversation
         conversation = session.get(Conversation, conversation_id)
         if conversation:
             conversation.last_activity = datetime.utcnow()

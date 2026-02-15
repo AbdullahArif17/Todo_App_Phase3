@@ -9,7 +9,7 @@ from src.services.todo_service import TodoService
 
 router = APIRouter()
 
-@router.get("/", response_model=List[TodoTask])
+@router.get("", response_model=List[TodoTask])
 async def get_todos(
     current_user: User = Depends(get_current_user),
     db_session: Session = Depends(get_db_session)
@@ -21,7 +21,7 @@ async def get_todos(
     return todos
 
 
-@router.post("/", response_model=TodoTask)
+@router.post("", response_model=TodoTask)
 async def create_todo(
     todo_data: TodoTaskCreate,
     current_user: User = Depends(get_current_user),

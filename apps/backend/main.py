@@ -14,6 +14,7 @@ from src.api.v1.auth import router as auth_router
 from src.api.v1.todos import router as todos_router
 from src.core.config import settings
 import logging
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 # Set up logging
 logging.basicConfig(level=settings.LOG_LEVEL.upper())
@@ -51,6 +52,9 @@ app = FastAPI(
     lifespan=lifespan,
     redirect_slashes=True
 )
+
+# Add ProxyHeadersMiddleware to handle HTTPS redirects correctly behind reverse proxies (like Hugging Face)
+app.add_middleware(ProxyHeadersMiddleware, trust_proxies=["*"])
 
 
 # Add CORS middleware

@@ -35,7 +35,7 @@ class Settings(BaseSettings):
 
     # AI Service configuration
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.1-70b-versatile")
+    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
     AI_PROVIDER: str = os.getenv("AI_PROVIDER", "groq")  # Options: openai, groq
     AI_TEMPERATURE: float = float(os.getenv("AI_TEMPERATURE", "0.7"))
     AI_MAX_TOKENS: int = int(os.getenv("AI_MAX_TOKENS", "1000"))

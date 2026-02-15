@@ -119,7 +119,7 @@ class ChatService:
         Returns:
             List of created Message objects
         """
-        from models.message import Message
+        from ..models.message import Message
         from datetime import datetime
         import uuid
 
@@ -140,7 +140,7 @@ class ChatService:
             session.add(message)
 
         # Update conversation statistics
-        from models.conversation import Conversation
+        from ..models.conversation import Conversation
         conversation = session.get(Conversation, conversation_id)
         if conversation:
             conversation.last_activity = datetime.utcnow()
@@ -298,7 +298,7 @@ class ChatService:
         """
         try:
             # Create new conversation
-            from models.conversation import Conversation
+            from ..models.conversation import Conversation
             from datetime import datetime
             import uuid
 
@@ -320,7 +320,7 @@ class ChatService:
 
             # Import messages
             for msg_data in import_data.get("messages", []):
-                from models.message import Message
+                from ..models.message import Message
 
                 message = Message(
                     id=uuid.UUID(msg_data["id"]) if msg_data.get("id") else uuid.uuid4(),
@@ -365,7 +365,7 @@ class ChatService:
             session.add(parent_conversation)
 
             # Create the new branched conversation
-            from models.conversation import Conversation
+            from ..models.conversation import Conversation
             from datetime import datetime
             import uuid
 
@@ -401,7 +401,7 @@ class ChatService:
         Returns:
             List of conversation IDs that branch from the parent
         """
-        from models.conversation import Conversation
+        from ..models.conversation import Conversation
         from sqlmodel import select
 
         # First verify the user has access to the parent conversation
@@ -432,8 +432,8 @@ class ChatService:
         Returns:
             List of conversation IDs that match the search term
         """
-        from models.conversation import Conversation
-        from models.message import Message
+        from ..models.conversation import Conversation
+        from ..models.message import Message
         from sqlmodel import select, and_, or_
         from sqlalchemy import func
 
@@ -479,7 +479,7 @@ class ChatService:
         Returns:
             List of messages that match the search term
         """
-        from models.message import Message
+        from ..models.message import Message
         from sqlmodel import select, and_
 
         # Verify user has access to the conversation
@@ -512,8 +512,8 @@ class ChatService:
         Returns:
             True if successful, False otherwise
         """
-        from models.conversation import Conversation
-        from models.tag import Tag, conversation_tag
+        from ..models.conversation import Conversation
+        from ..models.tag import Tag, conversation_tag
         from sqlmodel import select
 
         # Verify user has access to the conversation
@@ -570,8 +570,8 @@ class ChatService:
         Returns:
             True if successful, False otherwise
         """
-        from models.conversation import Conversation
-        from models.tag import Tag, conversation_tag
+        from ..models.conversation import Conversation
+        from ..models.tag import Tag, conversation_tag
         from sqlmodel import select
 
         # Verify user has access to the conversation
@@ -614,8 +614,8 @@ class ChatService:
         Returns:
             List of conversation IDs with the specified tag
         """
-        from models.conversation import Conversation
-        from models.tag import Tag
+        from ..models.conversation import Conversation
+        from ..models.tag import Tag
         from sqlmodel import select
         from sqlalchemy import text
 
@@ -659,8 +659,8 @@ class ChatService:
         Returns:
             True if successful, False otherwise
         """
-        from models.conversation import Conversation
-        from models.user import User
+        from ..models.conversation import Conversation
+        from ..models.user import User
         from sqlmodel import select
 
         # Verify the owner has access to the conversation
@@ -711,7 +711,7 @@ class ChatService:
         Returns:
             ID of the new conversation, or None if creation failed
         """
-        from models.template import Template
+        from ..models.template import Template
         from sqlmodel import select
 
         # Get the template
@@ -745,7 +745,7 @@ class ChatService:
         Returns:
             List of templates owned by the user
         """
-        from models.template import Template
+        from ..models.template import Template
         from sqlmodel import select
 
         statement = select(Template).where(Template.user_id == user_id)
@@ -762,7 +762,7 @@ class ChatService:
         Returns:
             List of public templates
         """
-        from models.template import Template
+        from ..models.template import Template
         from sqlmodel import select
 
         statement = select(Template).where(Template.is_public == True)
@@ -782,7 +782,7 @@ class ChatService:
         Returns:
             Number of messages archived
         """
-        from models.message import Message
+        from ..models.message import Message
         from sqlmodel import select
         from datetime import datetime, timedelta
 
@@ -833,8 +833,8 @@ class ChatService:
         Returns:
             True if successful, False otherwise
         """
-        from models.conversation import Conversation
-        from models.message import Message
+        from ..models.conversation import Conversation
+        from ..models.message import Message
         from sqlmodel import select
 
         # Verify that the requesting user is the same as the user whose data is being deleted
@@ -873,8 +873,8 @@ class ChatService:
         Returns:
             True if successful, False otherwise
         """
-        from models.conversation import Conversation
-        from models.message import Message
+        from ..models.conversation import Conversation
+        from ..models.message import Message
         from sqlmodel import select
 
         # Verify user has access to this conversation
@@ -906,8 +906,8 @@ class ChatService:
         Returns:
             True if successful, False otherwise
         """
-        from models.conversation import Conversation
-        from models.message import Message
+        from ..models.conversation import Conversation
+        from ..models.message import Message
         from sqlmodel import select
 
         # Verify that the requesting user is the same as the user whose data is being anonymized
@@ -955,7 +955,7 @@ class ChatService:
             return None
 
         # Use the existing export_conversation method for each conversation
-        from models.conversation import Conversation
+        from ..models.conversation import Conversation
         from sqlmodel import select
 
         # Get all conversations for the user

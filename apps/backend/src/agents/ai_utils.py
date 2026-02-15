@@ -6,8 +6,8 @@ Helper functions for agent context building and conversation management
 from typing import List, Dict, Any
 from datetime import datetime
 
-from apps.backend.src.models.message import Message
-from apps.backend.src.models.conversation import Conversation
+from ..models.message import Message
+from ..models.conversation import Conversation
 
 
 def build_agent_context(conversation: Conversation, messages: List[Message], user_id: str) -> str:

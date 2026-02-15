@@ -356,6 +356,11 @@ class TodoAgent:
                                 result = {"success": False, "message": f"Unknown tool: {function_name}"}
                         except ValueError as e:
                             result = {"success": False, "message": f"Invalid ID format: {str(e)}"}
+                except Exception as e:
+                    result = {
+                        "success": False,
+                        "message": f"Error executing function {function_name}: {str(e)}"
+                    }
 
                 # Add function response to the messages
                 messages.append({

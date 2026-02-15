@@ -54,7 +54,7 @@ app = FastAPI(
 )
 
 # Add ProxyHeadersMiddleware to handle HTTPS redirects correctly behind reverse proxies (like Hugging Face)
-app.add_middleware(ProxyHeadersMiddleware, trust_proxies=["*"])
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
 
 # Add CORS middleware

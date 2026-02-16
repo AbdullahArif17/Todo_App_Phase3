@@ -16,9 +16,10 @@ class ChatService:
         self.response_processor = response_processor
         self.build_agent_context = build_agent_context
 
-    def create_conversation(self, session: Session, user_id: uuid.UUID, title: str = "New Conversation") -> Conversation:
+    def create_conversation(self, session: Session, user_id: uuid.UUID, title: str = "New Conversation", conversation_id: Optional[uuid.UUID] = None) -> Conversation:
         """Create a new conversation for a user."""
         conversation = Conversation(
+            id=conversation_id or uuid.uuid4(),
             user_id=user_id,
             title=title,
             message_count=0  # Initialize message count

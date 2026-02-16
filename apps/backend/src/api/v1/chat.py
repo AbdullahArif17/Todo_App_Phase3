@@ -136,14 +136,24 @@ async def chat_endpoint(
         )
         conversation_id = conversation.id
     else:
-        # Validate that the user can access this conversation
+        # Check if conversation exists for user
         if not chat_service.validate_conversation_access(session, conversation_id, current_user.id):
-            from ...utils.logging import log_security_event
-            log_security_event("UNAUTHORIZED_CONVERSATION_ACCESS", current_user.id, f"Attempted to access conversation {conversation_id}")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to access this conversation"
-            )
+            # If not found, try to create it with this ID (optimistic UI pattern)
+            try:
+                conversation = chat_service.create_conversation(
+                    session=session,
+                    user_id=current_user.id,
+                    title=f"Chat started {chat_request.message[:30]}...",
+                    conversation_id=conversation_id
+                )
+            except Exception:
+                # If creation fails (e.g. ID collision with another user), treat as unauthorized
+                from ...utils.logging import log_security_event
+                log_security_event("UNAUTHORIZED_CONVERSATION_ACCESS", current_user.id, f"Attempted to access existing conversation {conversation_id}")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Not authorized to access conversation"
+                )
 
     # Persist the user's message to the database
     user_message = chat_service.create_message(

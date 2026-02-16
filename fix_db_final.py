@@ -2,6 +2,7 @@ import sys
 import os
 import traceback
 
+
 # Redirect output
 sys.stdout = open('fix_result_final.txt', 'w')
 sys.stderr = sys.stdout

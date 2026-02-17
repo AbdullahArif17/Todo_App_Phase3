@@ -160,13 +160,13 @@ class TodoAgent:
                     "type": "function",
                     "function": {
                         "name": "delete_task",
-                        "description": "Permanently remove a task from the user's list. Requires the task's unique ID.",
+                        "description": "Remove tasks from the user's list. Can delete a single task by ID or all tasks at once.",
                         "parameters": {
                             "type": "object",
                             "properties": {
-                                "task_id": {"type": "string", "description": "The UUID of the task to delete"}
-                            },
-                            "required": ["task_id"]
+                                "task_id": {"type": "string", "description": "The UUID of the task to delete. Skip if deleting all."},
+                                "all_tasks": {"type": "boolean", "description": "Set to true to delete EVERY task in the user's list."}
+                            }
                         }
                     }
                 }
@@ -293,9 +293,18 @@ class TodoAgent:
                             else:
                                 result = {"success": False, "message": "Task not found or access denied"}
                         elif function_name == "delete_task":
-                            task_id = uuid.UUID(args_dict.get("task_id"))
-                            success = await todo_service.delete_todo(task_id, temp_user, session)
-                            result = {"success": success, "message": "Task deleted successfully" if success else "Task not found or access denied"}
+                            all_tasks = args_dict.get("all_tasks", False)
+                            if all_tasks:
+                                count = await todo_service.delete_all_todos(temp_user, session)
+                                result = {"success": True, "message": f"Successfully deleted all {count} tasks"}
+                            else:
+                                t_id = args_dict.get("task_id")
+                                if not t_id:
+                                    result = {"success": False, "message": "No task ID provided and all_tasks was false"}
+                                else:
+                                    task_id = uuid.UUID(t_id)
+                                    success = await todo_service.delete_todo(task_id, temp_user, session)
+                                    result = {"success": success, "message": "Task deleted successfully" if success else "Task not found or access denied"}
                         else:
                             result = {"success": False, "message": f"Unknown tool: {function_name}"}
                     except ValueError as e:

@@ -90,6 +90,17 @@ class TodoService:
         return True
 
     @staticmethod
+    async def delete_all_todos(user: User, db_session: Session) -> int:
+        """
+        Delete all todo tasks for a specific user
+        """
+        from sqlmodel import delete
+        statement = delete(TodoTask).where(TodoTask.user_id == user.id)
+        result = db_session.exec(statement)
+        db_session.commit()
+        return result.rowcount
+
+    @staticmethod
     async def toggle_todo_completion(todo_id: UUID, is_completed: bool, user: User, db_session: Session) -> Optional[TodoTask]:
         """
         Toggle completion status of a todo task for a user (enforces user ownership)

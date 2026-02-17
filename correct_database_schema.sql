@@ -1,7 +1,7 @@
 -- SQL schema for the multi-user todo application (matching SQLModel expectations)
 
 -- Users table (matches User class in models/user.py)
-CREATE TABLE IF NOT EXISTS "user" (
+CREATE TABLE IF NOT EXISTS "users" (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
     full_name VARCHAR(255),
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS "user" (
 );
 
 -- Index on email for faster lookups
-CREATE INDEX IF NOT EXISTS idx_user_email ON "user"(email);
+CREATE INDEX IF NOT EXISTS idx_users_email ON "users"(email);
 
 -- TodoTask table (matches TodoTask class in models/todo_task.py)
 CREATE TABLE IF NOT EXISTS "todotask" (
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS "todotask" (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     is_completed BOOLEAN DEFAULT FALSE,
-    user_id UUID NOT NULL REFERENCES "user"(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES "users"(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -44,7 +44,7 @@ END;
 $$ language 'plpgsql';
 
 -- Triggers to automatically update the updated_at column
-CREATE TRIGGER update_user_updated_at BEFORE UPDATE ON "user"
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON "users"
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_todotask_updated_at BEFORE UPDATE ON "todotask"

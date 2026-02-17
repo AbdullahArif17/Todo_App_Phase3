@@ -15,15 +15,13 @@ export default function SignInPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+    
     setError('');
-
     setLoading(true);
 
     try {
-      // Use the login function from AuthContext which handles storage and state
       await login(email, password);
-
-      // Redirect to dashboard
       router.push('/dashboard/todos');
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred during login';
@@ -34,81 +32,87 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold text-foreground">
-            Sign in to your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-muted-foreground">
-            Enter your credentials to access your todo list
-          </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="rounded-md bg-destructive/10 p-4 border border-destructive/30">
-              <div className="text-sm text-destructive-foreground">{error}</div>
-            </div>
-          )}
-          <input type="hidden" name="remember" defaultValue="true" />
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email-address" className="block text-sm font-medium text-foreground mb-1">
-                Email address
-              </label>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="relative block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors sm:text-sm"
-                placeholder="name@example.com"
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-foreground mb-1">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="relative block w-full px-3 py-2 border border-input bg-background text-foreground rounded-md placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors sm:text-sm"
-                placeholder="••••••••"
-              />
-            </div>
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
+      {/* Background Decor */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-20">
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-primary/20 blur-[120px] rounded-full"></div>
+        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-full"></div>
+      </div>
+
+      <div className="max-w-md w-full relative z-10 animate-in fade-in zoom-in-95 duration-700">
+        <div className="bg-card/40 backdrop-blur-2xl border border-border/50 rounded-[2.5rem] p-8 sm:p-12 shadow-2xl">
+          <div className="mb-10 text-center">
+            <h1 className="text-4xl font-black text-foreground tracking-tighter mb-2">
+              WELCOME <span className="text-primary italic">BACK</span>
+            </h1>
+            <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest opacity-60">
+              Identity Verification Required
+            </p>
           </div>
 
-          <div>
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {error && (
+              <div className="rounded-2xl bg-destructive/10 p-4 border border-destructive/20 flex items-center gap-3 animate-in shake duration-300">
+                <div className="text-xs text-destructive font-black uppercase tracking-tight">{error}</div>
+              </div>
+            )}
+
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <label htmlFor="email-address" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">
+                  Access Portal / Email
+                </label>
+                <input
+                  id="email-address"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="block w-full rounded-2xl border border-input/50 bg-background/50 px-5 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all font-medium"
+                  placeholder="name@example.com"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 ml-1">
+                  Security Protocol / Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="block w-full rounded-2xl border border-input/50 bg-background/50 px-5 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all font-medium"
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:opacity-50"
+              className="w-full inline-flex items-center justify-center h-16 bg-primary text-primary-foreground font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl hover:bg-primary/90 focus:outline-none active:scale-[0.98] transition-all disabled:opacity-50 mt-4 overflow-hidden relative group"
             >
-              {loading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Signing in...
-                </>
-              ) : 'Sign in'}
+              <span className="relative z-10">
+                {loading ? 'Verifying...' : 'Initiate Session'}
+              </span>
+              <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
             </button>
+          </form>
+
+          <div className="mt-10 text-center">
+            <Link href="/auth/sign-up" className="text-[11px] font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">
+              New User? <span className="text-primary italic">Register Here</span>
+            </Link>
           </div>
-        </form>
-        <div className="text-center">
-          <Link href="/auth/sign-up" className="font-medium text-primary hover:text-primary/80 transition-colors">
-            Don&apos;t have an account? <span className="underline">Sign up</span>
-          </Link>
         </div>
+        
+        <p className="mt-8 text-center text-[10px] text-muted-foreground font-bold tracking-[0.2em] uppercase opacity-30">
+          Secure Todo Infrastructure v3.0
+        </p>
       </div>
     </div>
   );

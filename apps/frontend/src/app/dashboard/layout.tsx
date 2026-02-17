@@ -37,40 +37,40 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <nav className="bg-card border-b border-border">
+      <nav className="bg-card/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-foreground">
-                Todo App Dashboard
+            <div className="flex items-center gap-2 sm:gap-8 overflow-hidden">
+              <h1 className="text-lg sm:text-xl font-black text-foreground tracking-tighter truncate shrink-0">
+                TODO<span className="text-primary italic">APP</span>
               </h1>
-              <div className="ml-10 flex space-x-4">
+              <div className="flex items-center space-x-1 sm:space-x-4 overflow-x-auto no-scrollbar py-1">
                 <Link
                   href="/dashboard/todos"
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                  className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                     isActive('/dashboard/todos')
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-foreground hover:bg-accent hover:text-accent-foreground'
+                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                   }`}
                 >
-                  Todos
+                  Objectives
                 </Link>
                 <Link
                   href="/dashboard/chat"
-                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                  className={`px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
                     isActive('/dashboard/chat')
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-foreground hover:bg-accent hover:text-accent-foreground'
+                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                   }`}
                 >
-                  AI Chat
+                  AI Assistant
                 </Link>
               </div>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center ml-2">
               <button
                 onClick={handleLogout}
-                className="ml-4 px-4 py-2 text-sm font-medium text-destructive-foreground bg-destructive hover:bg-destructive/90 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-destructive transition-colors"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-destructive hover:bg-destructive/10 border border-destructive/20 rounded-xl transition-all active:scale-95 whitespace-nowrap"
               >
                 Logout
               </button>
@@ -79,8 +79,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
       </nav>
 
-      <main>
-        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">{children}</div>
+      <main className="relative">
+        <div className="max-w-7xl mx-auto py-4 sm:py-8">
+          {children}
+        </div>
       </main>
     </div>
   );

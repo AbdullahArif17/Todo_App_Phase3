@@ -60,7 +60,7 @@ export default function SignUpPage() {
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="rounded-2xl bg-destructive/10 p-4 border border-destructive/20 flex items-center gap-3 animate-in shake duration-300">
+              <div className="rounded-2xl bg-destructive/10 p-4 border border-destructive/20 flex items-center gap-3 animate-shake">
                 <div className="text-xs text-destructive font-black uppercase tracking-tight">{error}</div>
               </div>
             )}

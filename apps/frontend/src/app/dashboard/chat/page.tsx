@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/context/auth-context';
 import chatService, { Conversation } from '@/services/chat-service';
 
@@ -15,18 +15,7 @@ const ChatPage = () => {
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load conversation list and restore last session
-  useEffect(() => {
-    if (user) {
-      loadConversations();
-      const savedConversationId = localStorage.getItem(`chat_conversation_${user.id}`);
-      if (savedConversationId) {
-        handleSelectConversation(savedConversationId);
-      }
-    }
-  }, [user]);
-
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     if (!user) return;
     try {
       const convs = await chatService.getConversations(user.id);
@@ -34,17 +23,9 @@ const ChatPage = () => {
     } catch (error) {
       console.error('Error fetching conversations:', error);
     }
-  };
+  }, [user]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSelectConversation = async (id: string) => {
+  const handleSelectConversation = useCallback(async (id: string) => {
     if (!user || isHistoryLoading) return;
     
     setIsHistoryLoading(true);
@@ -64,7 +45,26 @@ const ChatPage = () => {
     } finally {
       setIsHistoryLoading(false);
     }
+  }, [user, isHistoryLoading]);
+
+  // Load conversation list and restore last session
+  useEffect(() => {
+    if (user) {
+      loadConversations();
+      const savedConversationId = localStorage.getItem(`chat_conversation_${user.id}`);
+      if (savedConversationId) {
+        handleSelectConversation(savedConversationId);
+      }
+    }
+  }, [user, loadConversations, handleSelectConversation]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const startNewChat = () => {
     setConversationId(null);
@@ -213,7 +213,7 @@ const ChatPage = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">Hello! I'm your task companion.</h3>
+              <h3 className="text-xl font-bold text-foreground mb-3">Hello! I&apos;m your task companion.</h3>
               <p className="text-sm text-muted-foreground max-w-sm mb-8 leading-relaxed">
                 I can help you capture ideas, organize your schedule, and track progress. Try asking: 
               </p>
@@ -229,7 +229,7 @@ const ChatPage = () => {
                     onClick={() => setMessage(hint)}
                     className="text-xs text-left p-3 rounded-xl border border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-all"
                   >
-                    "{hint}"
+                    &ldquo;{hint}&rdquo;
                   </button>
                 ))}
               </div>

@@ -13,7 +13,7 @@ from ...services.analytics_service import AnalyticsService
 router = APIRouter(tags=["conversations"])
 
 
-@router.get("/", response_model=List[Dict[str, Any]])
+@router.get("", response_model=List[Dict[str, Any]])
 def get_my_conversations(
     current_user: User = Depends(get_current_active_user),
     session: Session = Depends(get_session),

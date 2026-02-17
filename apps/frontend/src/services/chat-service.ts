@@ -82,8 +82,8 @@ class ChatService {
 
   async getConversations(userId: string, skip: number = 0, limit: number = 20): Promise<Conversation[]> {
     try {
-      // Use the dedicated conversations router which is cleaner
-      const response = await apiService.get<Conversation[]>(`/api/v1/conversations/?skip=${skip}&limit=${limit}`);
+      // Use the dedicated conversations router
+      const response = await apiService.get<Conversation[]>(`/api/v1/conversations?skip=${skip}&limit=${limit}`);
 
       return response;
     } catch (error: unknown) {

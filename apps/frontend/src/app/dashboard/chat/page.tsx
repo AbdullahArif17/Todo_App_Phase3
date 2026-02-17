@@ -12,6 +12,7 @@ const ChatPage = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [isListLoading, setIsListLoading] = useState(false);
+  const [listError, setListError] = useState<string | null>(null);
   
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -19,11 +20,13 @@ const ChatPage = () => {
   const loadConversations = useCallback(async () => {
     if (!user) return;
     setIsListLoading(true);
+    setListError(null);
     try {
       const convs = await chatService.getConversations(user.id);
       setConversations(convs);
     } catch (error) {
       console.error('Error fetching conversations:', error);
+      setListError('Failed to load history');
     } finally {
       setIsListLoading(false);
     }
@@ -60,7 +63,9 @@ const ChatPage = () => {
         handleSelectConversation(savedConversationId);
       }
     }
-  }, [user, loadConversations, handleSelectConversation]);
+    // We only want this to run once when the user is loaded
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -168,6 +173,16 @@ const ChatPage = () => {
               {[1, 2, 3].map(i => (
                 <div key={i} className="h-16 bg-muted/40 rounded-xl animate-pulse"></div>
               ))}
+            </div>
+          ) : listError ? (
+            <div className="text-center py-10 px-4">
+              <p className="text-xs text-destructive mb-3 font-medium">{listError}</p>
+              <button 
+                onClick={loadConversations}
+                className="text-xs bg-muted hover:bg-muted/80 px-4 py-2 rounded-lg transition-colors font-semibold"
+              >
+                Retry
+              </button>
             </div>
           ) : conversations.length === 0 ? (
             <div className="text-center py-12 px-4 opacity-50">

@@ -58,7 +58,7 @@ class ChatService {
 
   async getMessages(userId: string, conversationId: string, skip: number = 0, limit: number = 50): Promise<Message[]> {
     try {
-      // Use the main API service instead of direct fetch to ensure proper URL handling
+      // Use the cleaner message fetching route
       const response = await apiService.get<Message[]>(`/api/v1/chat/${userId}/conversations/${conversationId}/messages?skip=${skip}&limit=${limit}`);
 
       return response;
@@ -70,8 +70,8 @@ class ChatService {
 
   async getConversations(userId: string, skip: number = 0, limit: number = 20): Promise<Conversation[]> {
     try {
-      // Use the main API service instead of direct fetch to ensure proper URL handling
-      const response = await apiService.get<Conversation[]>(`/api/v1/chat/${userId}/conversations?skip=${skip}&limit=${limit}`);
+      // Use the dedicated conversations router which is cleaner
+      const response = await apiService.get<Conversation[]>(`/api/v1/conversations/?skip=${skip}&limit=${limit}`);
 
       return response;
     } catch (error: unknown) {
@@ -103,7 +103,7 @@ class ChatService {
 
   async getConversationMessages(conversationId: string, userId: string, skip: number = 0, limit: number = 50): Promise<Message[]> {
     try {
-      // Use the main API service instead of direct fetch to ensure proper URL handling
+      // Consistent with getMessages
       const response = await apiService.get<Message[]>(`/api/v1/chat/${userId}/conversations/${conversationId}/messages?skip=${skip}&limit=${limit}`);
 
       return response;

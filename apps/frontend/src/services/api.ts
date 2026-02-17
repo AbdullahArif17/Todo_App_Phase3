@@ -107,7 +107,7 @@ class ApiService {
     }
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // Increased timeout to 60s for slow HF wake-ups
 
     try {
       const response = await fetch(url, {
@@ -150,7 +150,7 @@ class ApiService {
     } catch (error: unknown) {
       clearTimeout(timeoutId);
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('Connection timed out. The backend might be sleeping or unreachable.');
+        throw new Error(`Connection timed out fetching: ${url}. The backend might be sleeping or slow.`);
       }
       throw error;
     }

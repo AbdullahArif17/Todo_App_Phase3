@@ -48,10 +48,19 @@ class TodoAgent:
             {
                 "role": "system",
                 "content": (
-                    "You are a helpful todo management assistant that helps users manage their tasks using natural language. "
-                    "You can help create, update, delete, and list todos. You have access to tools for these operations. "
-                    "Always respond in a friendly and helpful manner. "
-                    "When the user wants to perform a todo operation, use the appropriate tool."
+                    "You are an advanced AI Todo Management Assistant. Your goal is to help users manage their life and tasks efficiently. "
+                    "You have direct access to the user's todo database through specialized tools. "
+                    "\n\nCORE CAPABILITIES:\n"
+                    "1. Task Creation: Add tasks with titles and descriptions.\n"
+                    "2. Organization: List all tasks, search for specific ones, and view details.\n"
+                    "3. Management: Update task details, mark as completed, or delete tasks.\n"
+                    "4. Context Awareness: You remember previous parts of the conversation to help with follow-up requests.\n"
+                    "\n\nGUIDELINES:\n"
+                    "- Be concise but helpful.\n"
+                    "- If a user request is vague (e.g., 'remind me to do that thing'), ask for clarification.\n"
+                    "- When listing tasks, summarize them neatly.\n"
+                    "- If a task ID is needed but not provided, try to find it using the search or list tools first.\n"
+                    "- Always confirm successful actions (e.g., 'Done! I've added [task] to your list')."
                 )
             }
         ]
@@ -76,12 +85,12 @@ class TodoAgent:
                     "type": "function",
                     "function": {
                         "name": "add_task",
-                        "description": "Add a new task. Requires a title.",
+                        "description": "Create a new todo task. Use this when the user wants to remember or schedule something.",
                         "parameters": {
                             "type": "object",
                             "properties": {
-                                "title": {"type": "string", "description": "The title of the task to create"},
-                                "description": {"type": "string", "description": "Optional description of the task"}
+                                "title": {"type": "string", "description": "The concise title of the task"},
+                                "description": {"type": "string", "description": "More detailed notes about the task"}
                             },
                             "required": ["title"]
                         }
@@ -91,12 +100,12 @@ class TodoAgent:
                     "type": "function",
                     "function": {
                         "name": "list_tasks",
-                        "description": "List all tasks for the current user.",
+                        "description": "Get a list of the user's tasks. Use this to show the user what they have on their plate.",
                         "parameters": {
                             "type": "object",
                             "properties": {
-                                "limit": {"type": "integer", "description": "Maximum number of tasks to return (default: 10)"},
-                                "offset": {"type": "integer", "description": "Number of tasks to skip (default: 0)"}
+                                "limit": {"type": "integer", "description": "Max tasks to show (default: 10)"},
+                                "offset": {"type": "integer", "description": "Number of tasks to skip"}
                             }
                         }
                     }
@@ -104,15 +113,29 @@ class TodoAgent:
                 {
                     "type": "function",
                     "function": {
-                        "name": "update_task",
-                        "description": "Update an existing task. Requires task_id.",
+                        "name": "search_tasks",
+                        "description": "Search for specific tasks by keywords in their title or description. Use this to find existing tasks.",
                         "parameters": {
                             "type": "object",
                             "properties": {
-                                "task_id": {"type": "string", "description": "The ID of the task to update"},
-                                "title": {"type": "string", "description": "New title for the task (optional)"},
-                                "description": {"type": "string", "description": "New description for the task (optional)"},
-                                "is_completed": {"type": "boolean", "description": "New completion status for the task (optional)"}
+                                "query": {"type": "string", "description": "The search term to look for"}
+                            },
+                            "required": ["query"]
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "update_task",
+                        "description": "Modify an existing task. Requires the task's unique ID.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "task_id": {"type": "string", "description": "The UUID of the task to update"},
+                                "title": {"type": "string", "description": "New title"},
+                                "description": {"type": "string", "description": "New description"},
+                                "is_completed": {"type": "boolean", "description": "Set completion status"}
                             },
                             "required": ["task_id"]
                         }
@@ -122,12 +145,12 @@ class TodoAgent:
                     "type": "function",
                     "function": {
                         "name": "complete_task",
-                        "description": "Mark a task as complete or incomplete. Requires task_id.",
+                        "description": "Quickly mark a task as done or not done.",
                         "parameters": {
                             "type": "object",
                             "properties": {
-                                "task_id": {"type": "string", "description": "The ID of the task to update"},
-                                "is_completed": {"type": "boolean", "description": "Whether the task is completed (default: true)"}
+                                "task_id": {"type": "string", "description": "The UUID of the task"},
+                                "is_completed": {"type": "boolean", "description": "Status to set (True for done, False for not done)"}
                             },
                             "required": ["task_id"]
                         }
@@ -137,11 +160,11 @@ class TodoAgent:
                     "type": "function",
                     "function": {
                         "name": "delete_task",
-                        "description": "Delete a task. Requires task_id.",
+                        "description": "Permanently remove a task from the user's list. Requires the task's unique ID.",
                         "parameters": {
                             "type": "object",
                             "properties": {
-                                "task_id": {"type": "string", "description": "The ID of the task to delete"}
+                                "task_id": {"type": "string", "description": "The UUID of the task to delete"}
                             },
                             "required": ["task_id"]
                         }
@@ -238,6 +261,14 @@ class TodoAgent:
                                 "success": True,
                                 "message": f"Retrieved {len(tasks_paged)} tasks",
                                 "tasks": [{"id": str(t.id), "title": t.title, "is_completed": t.is_completed} for t in tasks_paged]
+                            }
+                        elif function_name == "search_tasks":
+                            query = args_dict.get("query", "")
+                            tasks = await todo_service.search_todos(query, temp_user, session)
+                            result = {
+                                "success": True,
+                                "message": f"Found {len(tasks)} tasks matching '{query}'",
+                                "tasks": [{"id": str(t.id), "title": t.title, "is_completed": t.is_completed} for t in tasks]
                             }
                         elif function_name == "update_task":
                             from ..models.todo_task import TodoTaskUpdate

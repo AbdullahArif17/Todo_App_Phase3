@@ -55,8 +55,8 @@ app.include_router(todos_router, prefix="/api/v1/todos", tags=["Todos"])
 # Include chat API router
 from .api.v1.chat import router as chat_router
 from .api.v1.conversations import router as conversations_router
-app.include_router(chat_router, prefix="/api/v1", tags=["Chat"])
-app.include_router(conversations_router, prefix="/api/v1", tags=["Conversations"])
+app.include_router(chat_router, prefix="/api/v1/chat", tags=["Chat"])
+app.include_router(conversations_router, prefix="/api/v1/conversations", tags=["Conversations"])
 
 @app.get("/")
 def read_root():

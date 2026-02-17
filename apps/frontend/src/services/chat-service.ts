@@ -59,7 +59,7 @@ class ChatService {
   async getMessages(userId: string, conversationId: string, skip: number = 0, limit: number = 50): Promise<Message[]> {
     try {
       // Use the main API service instead of direct fetch to ensure proper URL handling
-      const response = await apiService.get<Message[]>(`/api/v1/conversations/${userId}/conversations/${conversationId}/messages?skip=${skip}&limit=${limit}`);
+      const response = await apiService.get<Message[]>(`/api/v1/chat/${userId}/conversations/${conversationId}/messages?skip=${skip}&limit=${limit}`);
 
       return response;
     } catch (error: unknown) {
@@ -71,7 +71,7 @@ class ChatService {
   async getConversations(userId: string, skip: number = 0, limit: number = 20): Promise<Conversation[]> {
     try {
       // Use the main API service instead of direct fetch to ensure proper URL handling
-      const response = await apiService.get<Conversation[]>(`/api/v1/conversations/${userId}?skip=${skip}&limit=${limit}`);
+      const response = await apiService.get<Conversation[]>(`/api/v1/chat/${userId}/conversations?skip=${skip}&limit=${limit}`);
 
       return response;
     } catch (error: unknown) {
@@ -83,7 +83,7 @@ class ChatService {
   async searchConversations(userId: string, query: string, limit: number = 20, offset: number = 0): Promise<SearchResultsResponse> {
     try {
       // Use the main API service instead of direct fetch to ensure proper URL handling
-      const response = await apiService.get<SearchResultsResponse>(`/api/v1/search/${userId}?query=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`);
+      const response = await apiService.get<SearchResultsResponse>(`/api/v1/chat/${userId}/search?query=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`);
 
       // Return properly structured result
       return {
@@ -104,7 +104,7 @@ class ChatService {
   async getConversationMessages(conversationId: string, userId: string, skip: number = 0, limit: number = 50): Promise<Message[]> {
     try {
       // Use the main API service instead of direct fetch to ensure proper URL handling
-      const response = await apiService.get<Message[]>(`/api/v1/conversations/${userId}/conversations/${conversationId}/messages?skip=${skip}&limit=${limit}`);
+      const response = await apiService.get<Message[]>(`/api/v1/chat/${userId}/conversations/${conversationId}/messages?skip=${skip}&limit=${limit}`);
 
       return response;
     } catch (error: unknown) {

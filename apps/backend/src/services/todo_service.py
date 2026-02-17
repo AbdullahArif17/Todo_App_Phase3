@@ -112,3 +112,20 @@ class TodoService:
         db_session.refresh(todo)
 
         return todo
+
+    @staticmethod
+    async def search_todos(query: str, user: User, db_session: Session) -> List[TodoTask]:
+        """
+        Search for todo tasks for a specific user based on a query string
+        """
+        from sqlmodel import or_
+        search_pattern = f"%{query}%"
+        statement = select(TodoTask).where(
+            TodoTask.user_id == user.id,
+            or_(
+                TodoTask.title.ilike(search_pattern),
+                TodoTask.description.ilike(search_pattern)
+            )
+        )
+        todos = db_session.exec(statement).all()
+        return todos

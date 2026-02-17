@@ -16,6 +16,9 @@ export interface Conversation {
   user_id: string;
   created_at: string;
   updated_at: string;
+  last_activity?: string;
+  message_count?: number;
+  is_archived?: boolean;
 }
 
 export interface Message {
@@ -53,6 +56,15 @@ class ChatService {
     } catch (error: unknown) {
       const errorMessage = this.getErrorMessage(error);
       throw new Error(errorMessage || 'Failed to send chat message');
+    }
+  }
+
+  async deleteConversation(conversationId: string): Promise<void> {
+    try {
+      await apiService.delete(`/api/v1/conversations/${conversationId}`);
+    } catch (error: unknown) {
+      const errorMessage = this.getErrorMessage(error);
+      throw new Error(errorMessage || 'Failed to delete conversation');
     }
   }
 
